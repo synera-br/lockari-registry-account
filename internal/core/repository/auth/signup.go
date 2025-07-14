@@ -64,16 +64,14 @@ func (r *SignupEvent) Get(ctx context.Context, filters database.Conditional) (*e
 func (r *SignupEvent) List(ctx context.Context, filter []database.Conditional) ([]entity.Signup, error) {
 
 	fmt.Println("List SignupEvent on repository - start")
-	if len(filter) == 0 {
-		return nil, errors.New("invalid filters: no field provided")
-	}
-
-	for _, f := range filter {
-		if f.Field == "" {
-			return nil, errors.New("invalid filters: no field provided")
-		}
-		if f.Value == nil {
-			return nil, errors.New("invalid filters: no value provided")
+	if len(filter) > 0 {
+		for _, f := range filter {
+			if f.Field == "" {
+				return nil, errors.New("invalid filters: no field provided")
+			}
+			if f.Value == nil {
+				return nil, errors.New("invalid filters: no value provided")
+			}
 		}
 	}
 
