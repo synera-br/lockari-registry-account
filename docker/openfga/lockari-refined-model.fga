@@ -68,6 +68,7 @@ type vault
     define tenant: [tenant]
     define external_guest: [user]  # Usuários de outros tenants (enterprise)
     define api_token: [token]  # Tokens de API para automação
+    define external_share_request: [external_share_request]
     
     # === PERMISSÕES BÁSICAS ===
     
@@ -271,7 +272,8 @@ type audit_log
     
     # Acesso a logs de auditoria
     define can_read: auditor or can_manage from vault or system or compliance_officer
-    define can_export: auditor and (can_manage from vault) or compliance_officer
+    define can_export_auditor: auditor and can_manage from vault
+    define can_export: can_export_auditor or compliance_officer
     define can_search: auditor or can_manage from vault or compliance_officer
     define can_retention_policy: can_manage from vault and compliance_officer
 
@@ -310,13 +312,16 @@ type notification
 type session
   relations
     define user: [user]
+    define system: [user]
     define device: [user]
     define location: [user]
     define mfa_verified: [user]
     define suspicious: [user]
+    define tenant: [tenant]
     
     # Operações de sessão
-    define can_use: user and mfa_verified and not suspicious
+    define verified_user: user and mfa_verified
+    define can_use: verified_user but not suspicious
     define can_terminate: user or admin from tenant
     define can_audit: admin from tenant or system
 
@@ -333,6 +338,8 @@ type token
     define production: [user]  # Token para ambiente de produção
     define revoked: [user]  # Token revogado
     define rate_limited: [user]  # Token com rate limiting
+    define audit_log: [audit_log]
+    define backup: [backup]
     
     # Permissões específicas do token
     define can_read_secrets: [user]
@@ -342,7 +349,10 @@ type token
     define can_backup: [user]
     
     # Verificações de validade
-    define is_valid: not revoked and not expires
+    # define base: owner or service or tenant
+    # define is_valid: base but not revoked but not expires
+    define not_revoked: owner but not revoked
+    define is_valid: not_revoked but not expires
     define is_active: is_valid and owner
     
     # Operações básicas com tokens
