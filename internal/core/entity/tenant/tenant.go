@@ -2,6 +2,7 @@ package entity
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
@@ -112,6 +113,7 @@ func (ti *TenantInfo) IsValid() error {
 		return errors.New(ErrInvalidTenantInfoPlan)
 	}
 
+	ti.toLower()
 	return nil
 }
 
@@ -147,4 +149,11 @@ func (t *TenantInfo) SetTenantName(name string) error {
 	t.Name = name
 
 	return nil
+}
+
+func (t *TenantInfo) toLower() {
+	if t == nil {
+		return
+	}
+	t.Name = strings.ToLower(t.Name)
 }

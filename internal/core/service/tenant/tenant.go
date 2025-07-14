@@ -103,9 +103,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 	}
 
 	if tenant.Tenant.Name == "" {
-		fmt.Println("Tenant name is empty, setting default name", tenant.Owner.GetUsername())
 		tenant.Tenant.SetTenantName(tenant.Owner.GetUsername())
-		fmt.Println("Tenant name set to default:", tenant.Tenant.Name)
 	}
 
 	features := make([]authorization.PlanFeature, 0)

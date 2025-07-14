@@ -1,6 +1,9 @@
 package entity
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 // User
 // This event is triggered when a user performs an action that requires authentication, such as logging in or signing up.
@@ -22,6 +25,8 @@ func (u *Owner) IsValid() error {
 	if u.Email == "" {
 		return errors.New("invalid user: email is required")
 	}
+
+	u.toLower()
 
 	return nil
 }
@@ -53,9 +58,19 @@ func (u *Owner) SetUsername(username string) {
 	}
 	u.Username = username
 }
+
 func (u *Owner) GetUser() Owner {
 	if u == nil {
 		return Owner{}
 	}
 	return *u
+}
+
+func (u *Owner) toLower() {
+	if u == nil {
+		return
+	}
+
+	u.Email = strings.ToLower(u.Email)
+	u.Username = strings.ToLower(u.Username)
 }
