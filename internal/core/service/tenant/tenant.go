@@ -91,7 +91,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 			if existingTenant.Tenant.TenantID == tenant.Tenant.TenantID {
 				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with ID %s already exists", tenant.Tenant.TenantID))
 			}
-			if existingTenant.Tenant.Name == tenant.Tenant.Name {
+			if tenant.Tenant.Name != "" && (existingTenant.Tenant.Name == tenant.Tenant.Name) {
 				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
 			}
 		}
