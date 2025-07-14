@@ -238,6 +238,44 @@ func initializeAuth(db database.FirebaseDBInterface) (entity.LoginEventService, 
 
 func initializeAuthorization(config map[string]interface{}, v *viper.Viper) (authorization.LockariAuthorizationService, error) {
 	fmt.Println("Initializing OpenFGA client with configuration...")
+
+	if config == nil {
+		return nil, fmt.Errorf("OpenFGA configuration is nil")
+	}
+
+	if v == nil {
+		return nil, fmt.Errorf("viper configuration is nil")
+	}
+
+	// 1. Load OpenFGA configuration
+	if err := v.UnmarshalKey("openfga", &config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal OpenFGA configuration: %w", err)
+	}
+
+	c := authorization.Config{
+		APIURL:               config["api_url"].(string),
+		StoreID:              config["store_id"].(string),
+		AuthorizationModelID: config["authorization_model_id"].(string),
+		APITokenIssuer:       config["api_token_issuer"].(string),
+		APIAudience:          config["api_audience"].(string),
+		ClientID:             config["client_id"].(string),
+		ClientSecret:         config["client_secret"].(string),
+		Scopes:               config["scopes"].(string),
+		CacheCleanupInterval: time.Duration(config["cache_cleanup_interval"].(int)) * time.Second,
+		CacheEnabled:         config["cache_enabled"].(bool),
+		CacheTTL:             time.Duration(config["cache_ttl"].(int)) * time.Second,
+		HealthCheckEnabled:   config["health_check_enabled"].(bool),
+		HealthCheckInterval:  time.Duration(config["health_check_interval"].(int)) * time.Second,
+		HealthCheckTimeout:   time.Duration(config["health_check_timeout"].(int)) * time.Second,
+		Development:          config["development"].(bool),
+		Debug:                config["debug"].(bool),
+	}
+
+	// 2. Validate OpenFGA configuration
+	if len(config) == 0 {
+		return nil, fmt.Errorf("OpenFGA configuration is empty")
+	}
+
 	cfg, err := authorization.LoadFromViper(v)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OpenFGA configuration: %w", err)
