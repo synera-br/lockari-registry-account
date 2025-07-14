@@ -61,14 +61,20 @@ func (r *SignupEvent) Get(ctx context.Context, filters database.Conditional) (*e
 	return &signup, nil
 }
 
-func (r *SignupEvent) List(ctx context.Context, filter database.Conditional) ([]entity.Signup, error) {
+func (r *SignupEvent) List(ctx context.Context, filter []database.Conditional) ([]entity.Signup, error) {
 
 	fmt.Println("List SignupEvent on repository - start")
-	if filter.Field == "" {
+	if len(filter) == 0 {
 		return nil, errors.New("invalid filters: no field provided")
 	}
-	if filter.Value == nil {
-		return nil, errors.New("invalid filters: no value provided")
+
+	for _, f := range filter {
+		if f.Field == "" {
+			return nil, errors.New("invalid filters: no field provided")
+		}
+		if f.Value == nil {
+			return nil, errors.New("invalid filters: no value provided")
+		}
 	}
 
 	collection, err := core.SetCollection(ctx, r.collection)
@@ -77,10 +83,8 @@ func (r *SignupEvent) List(ctx context.Context, filter database.Conditional) ([]
 	}
 
 	var response []byte
-	if filter != (database.Conditional{}) {
-		filters := []database.Conditional{
-			filter,
-		}
+	if len(filter) > 0 {
+		filters := make([]database.Conditional, len(filter))
 		response, err = r.db.GetByConditional(ctx, filters, *collection)
 		if err != nil {
 			return nil, err
