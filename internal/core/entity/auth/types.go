@@ -13,7 +13,12 @@ type User struct {
 	Plan  string `json:"plan,omitempty"`           // Subscription plan of the user
 }
 
-
+// Client
+// This struct contains information about the client making the request, such as IP address and user agent.
+type Client struct {
+	IpAddress string `json:"ipAddress"` // IP address of the client
+	UserAgent string `json:"userAgent"` // User agent string of the client
+}
 
 // EventType
 // This struct defines the type of event that is being logged, such as login or signup.
