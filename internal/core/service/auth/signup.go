@@ -108,8 +108,9 @@ func (s *SignupEvent) Create(ctx context.Context, signupData *entity.Signup) (en
 		return nil, core.ErrGenericError("Failed to convert signup data to map")
 	}
 
-	allTenants, err := s.List(ctx)
 	tenantExists := false
+	allTenants, err := s.List(ctx)
+	fmt.Println("All tenants:", len(allTenants))
 	if err != nil {
 		tenantExists = false
 	}
