@@ -230,18 +230,18 @@ func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
 		return nil, fmt.Errorf(utils.GenericError, err.Error())
 	}
 
-	userFromToken, err := s.auth.GetUserID(ctx, token)
+	_, err = s.auth.GetUserID(ctx, token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user ID from token: %s", err.Error())
 	}
 
-	filter := database.Conditional{
-		Field:  "userId",
-		Value:  userFromToken,
-		Filter: database.FilterEquals,
-	}
+	// filter := database.Conditional{
+	// 	Field:  "userId",
+	// 	Value:  userFromToken,
+	// 	Filter: database.FilterEquals,
+	// }
 
-	result, err := s.repo.List(ctx, filter)
+	result, err := s.repo.List(ctx, database.Conditional{})
 	if err != nil {
 		return nil, err
 	}
