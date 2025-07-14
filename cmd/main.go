@@ -290,7 +290,7 @@ func initializeAuthorization(config map[string]interface{}, v *viper.Viper) (aut
 	}
 
 	logger := authorization.NewSlogAdapter(slog.Default())
-	logger.Info("Initializing OpenFGA client with configuration", "config", cfg)
+	logger.Info("Initializing OpenFGA client with configuration", "config", c)
 
 	opts := authorization.ClientOptions{
 		Config: cfg,
