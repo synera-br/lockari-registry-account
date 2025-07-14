@@ -78,6 +78,8 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		Email:    tenant.Owner.Email,
 	})
 
+	fmt.Println("Error tenant:", err)
+	fmt.Println("Existing tenant:", existingTenant)
 	if err != nil {
 		if err.Error() == corev1.TenantAlreadyExists {
 			return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
