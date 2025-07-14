@@ -113,6 +113,8 @@ func (s *SignupEvent) Create(ctx context.Context, signupData *entity.Signup) (en
 	fmt.Println("All tenants:", len(allTenants))
 	if err != nil {
 		tenantExists = false
+		log.Println("Error listing tenants:", err)
+		return nil, err
 	}
 
 	if len(allTenants) > 0 {
@@ -235,8 +237,8 @@ func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
 	userFromToken, err := s.auth.GetUserID(ctx, token)
 	fmt.Println("List SignupEvent - userFromToken", userFromToken)
 	if err != nil {
-		fmt.Println("List SignupEvent - error at GetUserID")
-		return nil, fmt.Errorf("failed to get user ID from token: %s", err.Error())
+		fmt.Println("List SignupEvent - error at GetUserID", err)
+		return nil, fmt.Errorf("failed to get user ID from token: %w", err)
 	}
 	fmt.Println("List SignupEvent - after getting user ID from token")
 
