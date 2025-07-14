@@ -231,7 +231,7 @@ func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
 
 	userFromToken, err := s.auth.GetUserID(ctx, token)
 	if err != nil {
-		return nil, fmt.Errorf(utils.ContextCancelled, ctx.Err().Error())
+		return nil, fmt.Errorf("failed to get user ID from token: %s", err.Error())
 	}
 
 	filter := database.Conditional{
