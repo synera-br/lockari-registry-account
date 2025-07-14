@@ -8,7 +8,7 @@ import (
 
 type TenantRepository interface {
 	Create(ctx context.Context, tenant *Tenant) (*Tenant, error)
-	Get(ctx context.Context, filters TenantFilter) (*Tenant, error)
+	Get(ctx context.Context, filters *TenantFilter) (*Tenant, error)
 	List(ctx context.Context, filters []TenantFilter) ([]Tenant, error)
 	Update(ctx context.Context, tenant *Tenant) (*Tenant, error)
 	Delete(ctx context.Context, tenantID string) error

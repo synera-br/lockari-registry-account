@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
+	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
 	"github.com/synera-br/lockari-backend-app/pkg/database"
 	"github.com/synera-br/lockari-backend-app/pkg/utils"
 )
@@ -54,8 +56,68 @@ func (r *tenantEventRepository) Create(ctx context.Context, tenant *entity.Tenan
 	return r.convertToEntity(response)
 }
 
-func (r *tenantEventRepository) Get(ctx context.Context, filters entity.TenantFilter) (*entity.Tenant, error) {
-	return nil, errors.New("not implemented")
+func (r *tenantEventRepository) Get(ctx context.Context, filters *entity.TenantFilter) (*entity.Tenant, error) {
+	if ctx.Err() != nil {
+		return nil, errors.New("context cancelled")
+	}
+
+	if filters == nil {
+		return nil, errors.New("tenant is required")
+	}
+
+	conditionals := database.Conditionals{}
+	objectName := ""
+	if filters.Plan != "" {
+		c := database.Conditional{
+			Field:  "plan",
+			Value:  filters.Plan,
+			Filter: database.FilterEquals,
+		}
+		conditionals = append(conditionals, c)
+		objectName = filters.Plan
+	}
+	if filters.TenantID != "" {
+		c := database.Conditional{
+			Field:  "tenant_id",
+			Value:  filters.TenantID,
+			Filter: database.FilterEquals,
+		}
+		conditionals = append(conditionals, c)
+		objectName = filters.TenantID
+	}
+	if filters.Email != "" {
+		c := database.Conditional{
+			Field:  "email",
+			Value:  filters.Email,
+			Filter: database.FilterEquals,
+		}
+		conditionals = append(conditionals, c)
+		objectName = filters.Email
+	}
+	if filters.Name != "" {
+		c := database.Conditional{
+			Field:  "name",
+			Value:  filters.Name,
+			Filter: database.FilterEquals,
+		}
+		conditionals = append(conditionals, c)
+		objectName = filters.Name
+	}
+
+	response, err := r.db.GetByConditional(ctx, conditionals, r.collection)
+	if err != nil {
+		return nil, errors.New("failed to get tenant event from database: " + err.Error())
+	}
+	if response == nil || len(response) == 0 {
+		return nil, fmt.Errorf(corev1.TenantNotFoundError, objectName)
+	}
+
+	tenant, err := r.convertToEntity(response)
+	if err != nil {
+		return nil, errors.New("failed to convert response to tenant entity: " + err.Error())
+	}
+
+	return tenant, nil
 }
 
 func (r *tenantEventRepository) List(ctx context.Context, filters []entity.TenantFilter) ([]entity.Tenant, error) {
