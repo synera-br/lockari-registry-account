@@ -77,7 +77,7 @@ func (r *SignupEvent) List(ctx context.Context, filter database.Conditional) ([]
 	}
 
 	var response []byte
-	if filter.Field != "" {
+	if filter != (database.Conditional{}) {
 		filters := []database.Conditional{
 			filter,
 		}
