@@ -109,7 +109,7 @@ func (s *SignupEvent) Create(ctx context.Context, signupData *entity.Signup) (en
 	}
 
 	tenantExists := false
-	allTenants, err := s.List(ctx)
+	allTenants, err := s.repo.List(ctx, database.Conditional{})
 	fmt.Println("All tenants:", len(allTenants))
 	if err != nil {
 		tenantExists = false
@@ -187,7 +187,6 @@ func (s *SignupEvent) Get(ctx context.Context, id string) (entity.SignupEvent, e
 	}
 
 	token := utils.GetTokenFromContext(ctx)
-
 	userFromToken, err := s.auth.GetUserID(ctx, token)
 	if err != nil {
 		return nil, fmt.Errorf(utils.ContextCancelled, ctx.Err().Error())
