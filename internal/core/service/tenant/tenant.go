@@ -51,7 +51,9 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, corev1.ErrGenericError("Tenant is required")
 	}
 	if err := tenant.IsValid(); err != nil {
-		return nil, corev1.ErrGenericError("Invalid tenant: " + err.Error())
+		if err.Error() != entity.ErrInvalidTenantInfoID {
+			return nil, corev1.ErrGenericError("Invalid tenant: " + err.Error())
+		}
 	}
 
 	// Check context
@@ -75,6 +77,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		Plan:     tenant.Tenant.Plan.String(),
 		Email:    tenant.Owner.Email,
 	})
+
 	if err != nil {
 		if err.Error() == corev1.TenantAlreadyExists {
 			return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
