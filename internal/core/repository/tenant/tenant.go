@@ -105,6 +105,7 @@ func (r *tenantEventRepository) Get(ctx context.Context, filters *entity.TenantF
 	}
 
 	response, err := r.db.GetByConditional(ctx, conditionals, r.collection)
+	fmt.Println("Error tenant:", err)
 	if err != nil {
 		return nil, errors.New("failed to get tenant event from database: " + err.Error())
 	}
@@ -112,6 +113,9 @@ func (r *tenantEventRepository) Get(ctx context.Context, filters *entity.TenantF
 		return nil, fmt.Errorf(corev1.TenantNotFoundError, objectName)
 	}
 
+	fmt.Println("Response tenant:", response)
+	fmt.Println("Response tenant length:", len(response))
+	fmt.Println("Response tenant string:", string(response))
 	tenant, err := r.convertToEntity(response)
 	if err != nil {
 		return nil, errors.New("failed to convert response to tenant entity: " + err.Error())
