@@ -71,7 +71,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 	}
 
 	// Check if tenant already exists
-	existingTenant, err := s.repo.Get(ctx, entity.TenantFilter{
+	existingTenant, err := s.repo.Get(ctx, &entity.TenantFilter{
 		TenantID: tenant.ID,
 		Name:     tenant.Tenant.Name,
 		Plan:     tenant.Tenant.Plan.String(),
