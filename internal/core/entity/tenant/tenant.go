@@ -99,10 +99,6 @@ func (ti *TenantInfo) IsValid() error {
 		return errors.New(ErrInvalidTenantInfo)
 	}
 
-	if ti.Name == "" {
-		return errors.New(ErrInvalidTenantInfoName)
-	}
-
 	if ti.TenantID == "" {
 		return errors.New(ErrInvalidTenantInfoID)
 	}
