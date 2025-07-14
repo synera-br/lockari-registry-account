@@ -57,7 +57,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cacheClient, err := initializeCache(cfg.Fields["cache"])
+	_, err = initializeCache(cfg.Fields["cache"])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,6 +93,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Println("Signup service initialized successfully")
+
 	auditSvc, err := initializeAuditEvent(db, authClient, tokenJWT)
 	if err != nil {
 		log.Fatal(err)
@@ -102,7 +104,6 @@ func main() {
 	webhandler.InitializeSignupHandler(signup, crypt, authClient, tokenJWT, apiResponse.RouterGroup, apiResponse.MiddlewareHeader)
 	webhandler_audit.InitializeAuditSystemEventHandler(auditSvc, crypt, authClient, tokenJWT, apiResponse.RouterGroup, apiResponse.MiddlewareHeader)
 
-	log.Println(cacheClient, signup)
 	log.Println("Starting Lockari Backend App...")
 
 	apiResponse.Run(apiResponse.Routes)
