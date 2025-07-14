@@ -102,6 +102,12 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, corev1.ErrGenericError("Failed to generate tenant ID")
 	}
 
+	if tenant.Tenant.Name == "" {
+		fmt.Println("Tenant name is empty, setting default name", tenant.Owner.GetUsername())
+		tenant.Tenant.SetTenantName(tenant.Owner.GetUsername())
+		fmt.Println("Tenant name set to default:", tenant.Tenant.Name)
+	}
+
 	features := make([]authorization.PlanFeature, 0)
 	for _, feature := range tenant.Tenant.Plan.GetFeatures() {
 		features = append(features, authorization.PlanFeature(feature))
