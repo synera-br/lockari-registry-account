@@ -216,11 +216,18 @@ func (s *SignupEvent) Get(ctx context.Context, id string) (entity.SignupEvent, e
 }
 
 func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
+	// CHECK CONTEXT
 	if ctx.Err() != nil {
 		return nil, fmt.Errorf(utils.ContextCancelled, ctx.Err().Error())
 	}
 
-	token := utils.GetTokenFromContext(ctx)
+	// CHECK TOKEN
+	token := utils.GetTokenFromContext(ctx) // Ensure user ID is retrieved from context
+
+	_, err := s.tokenJWT.Validate(token)
+	if err != nil {
+		return nil, fmt.Errorf(utils.GenericError, err.Error())
+	}
 
 	userFromToken, err := s.auth.GetUserID(ctx, token)
 	if err != nil {
