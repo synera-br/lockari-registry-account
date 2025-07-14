@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	eventtype "github.com/synera-br/lockari-backend-app/pkg/event_type"
+	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
 )
 
 const (
@@ -19,20 +19,79 @@ const (
 )
 
 type TenantInfo struct {
-	Name     string `json:"name,omitempty"`      // Name of the tenant
-	TenantID string `json:"tenant_id,omitempty"` // Unique identifier for the tenant
-	Plan     string `json:"plan,omitempty"`      // Subscription plan of the tenant
+	Name     string      `json:"name,omitempty"`      // Name of the tenant
+	TenantID string      `json:"tenant_id,omitempty"` // Unique identifier for the tenant
+	Plan     corev1.Plan `json:"plan,omitempty"`      // Subscription plan of the tenant
 }
 
 type Tenant struct {
-	ID         string              `json:"id,omitempty"`        // Unique identifier for the tenant
-	EventType  eventtype.EventType `json:"eventType,omitempty"` // Event type, e.g., SIGNUP_SUCCESS
-	Owner      Owner               `json:"owner" binding:"required"`
-	ClientInfo Client              `json:"clientInfo" binding:"required"`
-	Timestamp  time.Time           `json:"timestamp" binding:"required"`
-	CreatedAt  time.Time           `json:"createdAt,omitempty"` // Creation timestamp
-	UpdatedAt  time.Time           `json:"updatedAt,omitempty"` // Last update timestamp
-	Tenant     TenantInfo          `json:"tenant,omitempty"`    // Information about the tenant
+	ID         string           `json:"id,omitempty"`        // Unique identifier for the tenant
+	EventType  corev1.EventType `json:"eventType,omitempty"` // Event type, e.g., SIGNUP_SUCCESS
+	Owner      Owner            `json:"owner" binding:"required"`
+	ClientInfo Client           `json:"clientInfo" binding:"required"`
+	Timestamp  time.Time        `json:"timestamp" binding:"required"`
+	CreatedAt  time.Time        `json:"createdAt,omitempty"` // Creation timestamp
+	UpdatedAt  time.Time        `json:"updatedAt,omitempty"` // Last update timestamp
+	Tenant     TenantInfo       `json:"tenant,omitempty"`    // Information about the tenant
+}
+
+func (t *Tenant) IsValid() error {
+	if t == nil {
+		return errors.New(ErrInvalidTenant)
+	}
+
+	if t.Owner.IsValid() != nil {
+		return t.Owner.IsValid()
+	}
+	if t.ClientInfo.IsValid() != nil {
+		return t.ClientInfo.IsValid()
+	}
+	if t.Timestamp.IsZero() {
+		return errors.New("invalid tenant: timestamp is required")
+	}
+	if t.Tenant.IsValid() != nil {
+		return t.Tenant.IsValid()
+	}
+	if t.EventType.IsValid() != nil {
+		return errors.New("invalid tenant: eventType is required")
+	}
+
+	if t.CreatedAt.IsZero() {
+		t.CreatedAt = time.Now()
+	}
+	if t.UpdatedAt.IsZero() {
+		t.UpdatedAt = time.Now()
+	}
+	return nil
+}
+
+func (t *Tenant) GetTenant() Tenant {
+	if t == nil {
+		return Tenant{}
+	}
+	return *t
+}
+
+func (t *Tenant) GetPlan() string {
+	if t == nil {
+		return ""
+	}
+	return t.Tenant.Plan.String()
+}
+
+func (t *Tenant) GetOwner() Owner {
+	if t == nil {
+		return Owner{}
+	}
+	return t.Owner
+}
+
+func (t *Tenant) GetID() (string, bool) {
+	isValid := false
+	if t.ID != "" {
+		isValid = true
+	}
+	return t.ID, isValid
 }
 
 func (ti *TenantInfo) IsValid() error {

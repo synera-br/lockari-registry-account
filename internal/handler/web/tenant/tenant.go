@@ -8,36 +8,36 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/auth"
+	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
 	mid "github.com/synera-br/lockari-backend-app/internal/handler/middleware"
 	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
 	cryptserver "github.com/synera-br/lockari-backend-app/pkg/crypt/crypt_server"
 	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
 )
 
-type signupHandler struct {
-	svc        entity.SignupEventService
+type tenantHandler struct {
+	svc        entity.TenantService
 	encryptor  cryptserver.CryptDataInterface
 	authClient authenticator.Authenticator
 	tokenJWT   tokengen.TokenGenerator
 }
 
-type SignupHandlerInterface interface {
+type TenantHandlerInterface interface {
 	Create(c *gin.Context)
 	Get(c *gin.Context)
 	List(c *gin.Context)
 	Extras(c *gin.Context)
 }
 
-func InitializeSignupHandler(
-	svc entity.SignupEventService,
+func InitializeTenantHandler(
+	svc entity.TenantService,
 	encryptData cryptserver.CryptDataInterface,
 	authClient authenticator.Authenticator,
 	tokenJWT tokengen.TokenGenerator,
 	routerGroup *gin.RouterGroup,
 	middleware ...gin.HandlerFunc,
-) SignupHandlerInterface {
-	handler := &signupHandler{
+) TenantHandlerInterface {
+	handler := &tenantHandler{
 		svc:        svc,
 		encryptor:  encryptData,
 		authClient: authClient,
@@ -48,21 +48,21 @@ func InitializeSignupHandler(
 	return handler
 }
 
-func (h *signupHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...gin.HandlerFunc) {
+func (h *tenantHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...gin.HandlerFunc) {
 
-	signupRoutes := routerGroup.Group("/auth/signup")
+	tenantRoutes := routerGroup.Group("/auth/signup")
 	middleware = append(middleware, mid.ValidateTokenJWT(h.tokenJWT))
 	for _, mw := range middleware {
-		signupRoutes.Use(mw)
+		tenantRoutes.Use(mw)
 	}
 
-	signupRoutes.POST("", h.Create)
-	signupRoutes.GET("", h.List)
-	signupRoutes.GET("/:id", h.Get)
+	tenantRoutes.POST("", h.Create)
+	tenantRoutes.GET("", h.List)
+	tenantRoutes.GET("/:id", h.Get)
 
 }
 
-func (h *signupHandler) Create(c *gin.Context) {
+func (h *tenantHandler) Create(c *gin.Context) {
 	token := c.GetHeader("X-TOKEN")
 
 	_, err := h.tokenJWT.Validate(token)
@@ -87,35 +87,35 @@ func (h *signupHandler) Create(c *gin.Context) {
 	}
 
 	fmt.Println("Decrypted data:", string(decryptedData))
-	var signup entity.Signup
-	if err := json.Unmarshal(decryptedData, &signup); err != nil {
-		log.Println("Error unmarshalling signup event:", err)
-		c.JSON(400, gin.H{"error": "Invalid signup event data"})
+	var tenant entity.Tenant
+	if err := json.Unmarshal(decryptedData, &tenant); err != nil {
+		log.Println("Error unmarshalling tenant event:", err)
+		c.JSON(400, gin.H{"error": "Invalid tenant event data"})
 		return
 	}
 
 	ctx := context.WithValue(c.Request.Context(), "token", token)
-	_, err = h.svc.Create(ctx, &signup)
+	_, err = h.svc.Create(ctx, &tenant)
 	if err != nil {
-		log.Println("Error creating signup event:", err)
-		c.JSON(500, gin.H{"error": "Failed to create signup event"})
+		log.Println("Error creating tenant event:", err)
+		c.JSON(500, gin.H{"error": "Failed to create tenant event"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Signup event created successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Tenant event created successfully"})
 }
 
-func (h *signupHandler) Get(c *gin.Context) {
-	log.Println("Retrieving signup event...")
-	c.JSON(200, gin.H{"message": "Signup event retrieved successfully"})
+func (h *tenantHandler) Get(c *gin.Context) {
+	log.Println("Retrieving tenant event...")
+	c.JSON(200, gin.H{"message": "Tenant event retrieved successfully"})
 }
 
-func (h *signupHandler) List(c *gin.Context) {
-	log.Println("Listing signup events...")
-	c.JSON(200, gin.H{"message": "Signup events listed successfully"})
+func (h *tenantHandler) List(c *gin.Context) {
+	log.Println("Listing tenant events...")
+	c.JSON(200, gin.H{"message": "Tenant events listed successfully"})
 }
 
-func (h *signupHandler) Extras(c *gin.Context) {
+func (h *tenantHandler) Extras(c *gin.Context) {
 
 	var body cryptserver.CryptData
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -134,8 +134,8 @@ func (h *signupHandler) Extras(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Extras handled successfully"})
 }
 
-func (h *signupHandler) WithJWT(c *gin.Context) {
-	log.Println("Handling signup with JWT...")
+func (h *tenantHandler) WithJWT(c *gin.Context) {
+	log.Println("Handling tenant with JWT...")
 
 	// Exemplo de geração de token normal
 

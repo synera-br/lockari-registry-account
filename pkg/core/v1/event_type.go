@@ -1,4 +1,4 @@
-package eventtype
+package features
 
 import "errors"
 

@@ -14,16 +14,20 @@ import (
 
 	// AUhtneitcation
 	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/auth"
-	entity_auth "github.com/synera-br/lockari-backend-app/internal/core/entity/auth"
 	repo_auth "github.com/synera-br/lockari-backend-app/internal/core/repository/auth"
 	svc_auth "github.com/synera-br/lockari-backend-app/internal/core/service/auth"
-	webhandler "github.com/synera-br/lockari-backend-app/internal/handler/web/auth"
+	webhandler "github.com/synera-br/lockari-backend-app/internal/handler/web/tenant"
 
 	// AUDIT
 	entity_audit "github.com/synera-br/lockari-backend-app/internal/core/entity/audit"
 	repo_audit "github.com/synera-br/lockari-backend-app/internal/core/repository/audit"
 	svc_audit "github.com/synera-br/lockari-backend-app/internal/core/service/audit"
 	webhandler_audit "github.com/synera-br/lockari-backend-app/internal/handler/web/audit"
+
+	// TENANT
+	entity_tenant "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
+	repo_tenant "github.com/synera-br/lockari-backend-app/internal/core/repository/tenant"
+	svc_tenant "github.com/synera-br/lockari-backend-app/internal/core/service/tenant"
 
 	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
 	"github.com/synera-br/lockari-backend-app/pkg/authorization"
@@ -88,12 +92,12 @@ func main() {
 
 	log.Println("authorization OpenFGA...", authZ)
 
-	signup, err := initializeSignup(db, authClient, tokenJWT, authZ)
+	tenant, err := initializeTenant(db, authClient, tokenJWT, authZ)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("Signup service initialized successfully")
+	log.Println("Tenant service initialized successfully")
 
 	auditSvc, err := initializeAuditEvent(db, authClient, tokenJWT)
 	if err != nil {
@@ -101,7 +105,7 @@ func main() {
 	}
 
 	webhandler.InitializeLoginHandler(authSvc, crypt, authClient, tokenJWT, apiResponse.RouterGroup, apiResponse.MiddlewareHeader)
-	webhandler.InitializeSignupHandler(signup, crypt, authClient, tokenJWT, apiResponse.RouterGroup, apiResponse.MiddlewareHeader)
+	webhandler.InitializeTenantHandler(tenant, crypt, authClient, tokenJWT, apiResponse.RouterGroup, apiResponse.MiddlewareHeader)
 	webhandler_audit.InitializeAuditSystemEventHandler(auditSvc, crypt, authClient, tokenJWT, apiResponse.RouterGroup, apiResponse.MiddlewareHeader)
 
 	log.Println("Starting Lockari Backend App...")
@@ -333,21 +337,21 @@ func initializeAuthorization(config map[string]interface{}, v *viper.Viper) (aut
 	return lockariService, nil
 }
 
-func initializeSignup(db database.FirebaseDBInterface, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authZ authorization.LockariAuthorizationService) (entity_auth.SignupEventService, error) {
+func initializeTenant(db database.FirebaseDBInterface, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authZ authorization.LockariAuthorizationService) (entity_tenant.TenantService, error) {
 
 	authorization.NewLockariService(authorization.LockariServiceOptions{
 		Service: nil,
 		Config:  nil,
 		Logger:  nil,
 	})
-	repo, err := repo_auth.InitializeSignupEventRepository(db)
+	repo, err := repo_tenant.InitializeTenantEventRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize signup event repository: %w", err)
 	}
 
-	svc, err := svc_auth.InitializeSignupEventService(repo, auth, tokenJWT, authZ)
+	svc, err := svc_tenant.InitializeTenantEventService(repo, auth, tokenJWT, authZ)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize signup event service: %w", err)
+		return nil, fmt.Errorf("failed to initialize tenant event service: %w", err)
 	}
 
 	return svc, nil

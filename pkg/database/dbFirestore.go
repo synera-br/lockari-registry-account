@@ -40,6 +40,26 @@ type Conditional struct {
 	Filter Filter
 }
 
+type Conditionals []Conditional
+
+func (c Conditional) Validate() error {
+	if c.Field == "" {
+		return errors.New("field is required")
+	}
+	if c.Value == nil {
+		return errors.New("value is required")
+	}
+	if c.Filter == "" {
+		return errors.New("filter is required")
+	}
+	if c.Filter != FilterEquals && c.Filter != FilterNotEquals &&
+		c.Filter != FilterGreaterThan && c.Filter != FilterLessThan &&
+		c.Filter != FilterArrayContains {
+		return fmt.Errorf("invalid filter operator: %s", c.Filter)
+	}
+	return nil
+}
+
 // FirebaseDB implements the DatabaseService interface for Firebase Firestore.
 type FirebaseDB struct {
 	client *firestore.Client
