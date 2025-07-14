@@ -109,7 +109,8 @@ func (s *SignupEvent) Create(ctx context.Context, signupData *entity.Signup) (en
 	}
 
 	tenantExists := false
-	allTenants, err := s.repo.List(ctx, database.Conditional{})
+	foilters := make([]database.Conditional, 0)
+	allTenants, err := s.repo.List(ctx, foilters)
 	fmt.Println("All tenants:", len(allTenants))
 	if err != nil {
 		tenantExists = false

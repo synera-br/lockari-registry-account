@@ -12,7 +12,7 @@ import (
 type SignupEventRepository interface {
 	Create(ctx context.Context, filters map[string]interface{}) (*Signup, error)
 	Get(ctx context.Context, filters database.Conditional) (*Signup, error)
-	List(ctx context.Context, filters database.Conditional) ([]Signup, error)
+	List(ctx context.Context, filters []database.Conditional) ([]Signup, error)
 }
 
 // SignupEventService interface defines methods for handling signup events
