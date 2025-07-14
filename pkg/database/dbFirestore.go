@@ -265,6 +265,7 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 		return nil, errors.New(errorConditionalRequired)
 	}
 
+	fmt.Println("Conditionals:", conditional)
 	query := db.client.Collection(collection).Query
 	for _, cond := range conditional {
 		if cond.Field == "" {
