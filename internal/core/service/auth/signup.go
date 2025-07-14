@@ -218,6 +218,7 @@ func (s *SignupEvent) Get(ctx context.Context, id string) (entity.SignupEvent, e
 
 func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
 	// CHECK CONTEXT
+	fmt.Println("List SignupEvent")
 	if ctx.Err() != nil {
 		return nil, fmt.Errorf(utils.ContextCancelled, ctx.Err().Error())
 	}
@@ -240,12 +241,13 @@ func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
 	// 	Value:  userFromToken,
 	// 	Filter: database.FilterEquals,
 	// }
-
+	fmt.Println("List SignupEvent - before repo.List")
 	result, err := s.repo.List(ctx, database.Conditional{})
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Println("List SignupEvent - after repo.List")
 	if len(result) == 0 {
 		return nil, core.ErrNotFound("No signup events found for user")
 	}
@@ -260,5 +262,6 @@ func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
 		signupEvents = append(signupEvents, e)
 	}
 
+	fmt.Println("List SignupEvent - after processing results")
 	return signupEvents, nil
 }
