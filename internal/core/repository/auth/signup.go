@@ -74,13 +74,20 @@ func (r *SignupEvent) List(ctx context.Context, filter database.Conditional) ([]
 		return nil, err
 	}
 
-	filters := []database.Conditional{
-		filter,
-	}
-
-	response, err := r.db.GetByConditional(ctx, filters, *collection)
-	if err != nil {
-		return nil, err
+	var response []byte
+	if filter.Field != "" {
+		filters := []database.Conditional{
+			filter,
+		}
+		response, err = r.db.GetByConditional(ctx, filters, *collection)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		response, err = r.db.Get(ctx, *collection)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	items, err := r.convertToEntities(response)
