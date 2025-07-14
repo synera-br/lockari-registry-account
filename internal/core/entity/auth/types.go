@@ -152,3 +152,7 @@ func (e EventType) IsSuccessEvent() bool {
 func (e EventType) IsFailureEvent() bool {
 	return e == LOGIN_FAILURE
 }
+
+func (u *User) GetEmail() string {
+	return u.Email
+}

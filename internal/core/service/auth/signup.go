@@ -108,6 +108,33 @@ func (s *SignupEvent) Create(ctx context.Context, signupData *entity.Signup) (en
 		return nil, core.ErrGenericError("Failed to convert signup data to map")
 	}
 
+	allTenants, err := s.List(ctx)
+	tenantExists := false
+	if err != nil {
+		tenantExists = false
+	}
+
+	if len(allTenants) > 0 {
+		for _, tenant := range allTenants {
+			if tenant.GetTenant() == signup.GetTenant() {
+				tenantExists = true
+				break
+			}
+			if tenant.GetUser().Email == signup.GetUser().Email {
+				tenantExists = true
+				break
+			}
+			if tenant.GetSignup().Name == signup.GetSignup().Name {
+				tenantExists = true
+				break
+			}
+		}
+	}
+
+	if tenantExists {
+		return nil, core.ErrGenericError("Tenant already exists with the same name or email")
+	}
+
 	features := authorization.AllPlanFeatures()
 
 	err = s.authz.SetupTenant(ctx, tenantId, signupData.User.Uid, features)

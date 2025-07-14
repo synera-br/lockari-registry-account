@@ -35,6 +35,11 @@ type SignupEvent interface {
 	GetID() (string, bool) // Returns ID and a boolean indicating if the ID is valid
 }
 
+type SignupFilter struct {
+	User
+	Tenant string `json:"tenant,omitempty"`
+}
+
 // Signup
 // This event is triggered when a user successfully signs up for the application.
 type Signup struct {
