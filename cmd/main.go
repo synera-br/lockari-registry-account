@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
 
 	"github.com/go-viper/mapstructure/v2"
+	"github.com/spf13/viper"
 	"github.com/synera-br/lockari-backend-app/config"
 
 	// AUhtneitcation
@@ -24,6 +26,7 @@ import (
 	webhandler_audit "github.com/synera-br/lockari-backend-app/internal/handler/web/audit"
 
 	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
+	"github.com/synera-br/lockari-backend-app/pkg/authorization"
 	"github.com/synera-br/lockari-backend-app/pkg/cache"
 	cryptserver "github.com/synera-br/lockari-backend-app/pkg/crypt/crypt_server"
 	"github.com/synera-br/lockari-backend-app/pkg/database"
@@ -34,7 +37,7 @@ import (
 
 func main() {
 
-	cfg, err := config.LoadConfig()
+	cfg, viperCfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,7 +78,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	signup, err := initializeSignup(db, authClient, tokenJWT)
+	authZ, err := initializeAuthorization(cfg.Fields["openfga"].(map[string]interface{}), viperCfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	authZ.AddUserToTenant(context.Background(), "tenant-id", "user-id", "role")
+	authZ.SetupTenant(context.Background(), "tenant-id", "role", []authorization.PlanFeature{})
+
+	log.Println("authorization OpenFGA...", authZ)
+
+	signup, err := initializeSignup(db, authClient, tokenJWT, authZ)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -221,14 +234,74 @@ func initializeAuth(db database.FirebaseDBInterface) (entity.LoginEventService, 
 	return svc, nil
 }
 
-func initializeSignup(db database.FirebaseDBInterface, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator) (entity_auth.SignupEventService, error) {
+func initializeAuthorization(config map[string]interface{}, v *viper.Viper) (authorization.LockariAuthorizationService, error) {
 
+	cfg, err := authorization.LoadFromViper(v)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load OpenFGA configuration: %w", err)
+	}
+
+	if cfg.Validate() != nil {
+		return nil, fmt.Errorf("invalid OpenFGA configuration: %w", cfg.Validate())
+	}
+
+	logger := authorization.NewSlogAdapter(slog.Default())
+	logger.Info("Initializing OpenFGA client with configuration", "config", cfg)
+
+	opts := authorization.ClientOptions{
+		Config: cfg,
+		Logger: logger,
+		Cache: &authorization.CacheOptions{
+			CleanupInterval: cfg.CacheCleanupInterval,
+			MaxSize:         500,
+		}}
+
+	client, err := authorization.NewOpenFGAClient(opts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize OpenFGA client: %w", err)
+	}
+
+	// 4. Criar serviços auxiliares
+	cacheService := authorization.NewMemoryCache(authorization.CacheOptions{
+		CleanupInterval: cfg.CacheCleanupInterval,
+		MaxSize:         500,
+	})
+
+	// 5. Criar serviço básico
+	service := authorization.NewService(authorization.ServiceOptions{
+		Client: client,
+		Cache:  cacheService,
+		Logger: logger,
+	})
+
+	// 6. Criar serviço Lockari (implementação da interface)
+
+	lockariService := authorization.NewLockariAuthorizationService(authorization.LockariServiceOptions{
+		Service: service,
+		Config:  cfg,
+		Logger:  logger,
+	})
+
+	if lockariService == nil {
+		return nil, fmt.Errorf("failed to create LockariAuthorizationService")
+	}
+
+	return lockariService, nil
+}
+
+func initializeSignup(db database.FirebaseDBInterface, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authZ authorization.LockariAuthorizationService) (entity_auth.SignupEventService, error) {
+
+	authorization.NewLockariService(authorization.LockariServiceOptions{
+		Service: nil,
+		Config:  nil,
+		Logger:  nil,
+	})
 	repo, err := repo_auth.InitializeSignupEventRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize signup event repository: %w", err)
 	}
 
-	svc, err := svc_auth.InitializeSignupEventService(repo, auth, tokenJWT)
+	svc, err := svc_auth.InitializeSignupEventService(repo, auth, tokenJWT, authZ)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize signup event service: %w", err)
 	}

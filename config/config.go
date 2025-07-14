@@ -81,7 +81,7 @@ type RedisConfig struct {
 	DB       int    `mapstructure:"db"`
 }
 
-func LoadConfig() (*Connections, error) {
+func LoadConfig() (*Connections, *viper.Viper, error) {
 
 	if os.Getenv("PATH_CONFIG") != "" {
 		AppConfig.ExternalPath = os.Getenv("PATH_CONFIG")
@@ -104,19 +104,19 @@ func LoadConfig() (*Connections, error) {
 	err := viper.ReadInConfig()
 	if err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			return nil, err.(viper.ConfigFileNotFoundError)
+			return nil, nil, err.(viper.ConfigFileNotFoundError)
 		}
-		return nil, err
+		return nil, nil, err
 	}
 
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	err = os.Setenv("JSON_CONFIG_PATH", fc.ConfigFilePath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	log.Println("Config file loaded successfully")
@@ -130,5 +130,5 @@ func LoadConfig() (*Connections, error) {
 			Fields: viper.AllSettings(),
 			Keys:   viper.AllKeys(),
 		},
-	}, err
+	}, viper.GetViper(), err
 }

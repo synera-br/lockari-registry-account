@@ -8,6 +8,7 @@ import (
 	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/auth"
 	core "github.com/synera-br/lockari-backend-app/internal/core/entity/types"
 	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
+	"github.com/synera-br/lockari-backend-app/pkg/authorization"
 	"github.com/synera-br/lockari-backend-app/pkg/database"
 	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
 	"github.com/synera-br/lockari-backend-app/pkg/utils"
@@ -17,9 +18,10 @@ type SignupEvent struct {
 	repo     entity.SignupEventRepository
 	auth     authenticator.Authenticator
 	tokenJWT tokengen.TokenGenerator
+	authz    authorization.LockariAuthorizationService
 }
 
-func InitializeSignupEventService(repo entity.SignupEventRepository, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator) (entity.SignupEventService, error) {
+func InitializeSignupEventService(repo entity.SignupEventRepository, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authz authorization.LockariAuthorizationService) (entity.SignupEventService, error) {
 
 	if repo == nil {
 		return nil, core.ErrRepositoryNotFound("SignupEventRepository")
@@ -33,10 +35,15 @@ func InitializeSignupEventService(repo entity.SignupEventRepository, auth authen
 		return nil, core.ErrRepositoryNotFound("TokenGenerator")
 	}
 
+	if authz == nil {
+		return nil, core.ErrRepositoryNotFound("AuthorizationService")
+	}
+
 	return &SignupEvent{
 		repo:     repo,
 		auth:     auth,
 		tokenJWT: tokenJWT,
+		authz:    authz,
 	}, nil
 }
 
@@ -99,6 +106,25 @@ func (s *SignupEvent) Create(ctx context.Context, signupData *entity.Signup) (en
 	data, err := utils.StructToMap(signup.GetSignup())
 	if err != nil {
 		return nil, core.ErrGenericError("Failed to convert signup data to map")
+	}
+
+	features := authorization.AllPlanFeatures()
+
+	err = s.authz.SetupTenant(ctx, tenantId, signupData.User.Uid, features)
+	if err != nil {
+		if err := s.auth.SetTenantRollback(ctx, signupData.User.Uid, tenantId); err != nil {
+			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
+		}
+		return nil, authorization.NewAuthorizationError("SetupTenant", "Failed to setup tenant in authorization service", err)
+	}
+
+	// ADD USER TO TENANT
+	err = s.authz.AddUserToTenant(ctx, signupData.User.Uid, tenantId, authorization.TenantRoleOwner)
+	if err != nil {
+		if err := s.auth.SetTenantRollback(ctx, signupData.User.Uid, tenantId); err != nil {
+			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
+		}
+		return nil, authorization.NewAuthorizationError("AddUserToTenant", "Failed to add user to tenant in authorization service", err)
 	}
 
 	// CREATE SIGNUP EVENT

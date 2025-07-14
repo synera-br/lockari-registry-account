@@ -16,19 +16,29 @@ type LockariService struct {
 
 // LockariServiceOptions define opções para criar um LockariService
 type LockariServiceOptions struct {
-	Service      *Service
-	AuditService AuditService
-	Config       *Config
-	Logger       Logger
+	Service *Service
+	// AuditService AuditService
+	Config *Config
+	Logger Logger
 }
 
 // NewLockariService cria uma nova instância do LockariService
 func NewLockariService(opts LockariServiceOptions) *LockariService {
 	return &LockariService{
-		service:      opts.Service,
-		auditService: opts.AuditService,
-		config:       opts.Config,
-		logger:       opts.Logger,
+		service: opts.Service,
+		// auditService: opts.AuditService,
+		config: opts.Config,
+		logger: opts.Logger,
+	}
+}
+
+// NewLockariAuthorizationService cria uma nova instância do LockariService
+func NewLockariAuthorizationService(opts LockariServiceOptions) LockariAuthorizationService {
+	return &LockariService{
+		service: opts.Service,
+		// auditService: opts.AuditService,
+		config: opts.Config,
+		logger: opts.Logger,
 	}
 }
 
@@ -43,11 +53,11 @@ func (ls *LockariService) Check(ctx context.Context, req *CheckRequest) (*CheckR
 }
 
 // CheckBatch verifica múltiplas permissões em uma chamada (delegado para o serviço básico)
-func (ls *LockariService) CheckBatch(ctx context.Context, reqs []*CheckRequest) ([]*CheckResponse, error) {
+func (ls *LockariService) CheckBatch(ctx context.Context, reqs []*CheckRequest) (*BatchCheckResponse, error) {
 	if ls.service != nil {
 		return ls.service.CheckBatch(ctx, reqs)
 	}
-	return []*CheckResponse{}, nil
+	return &BatchCheckResponse{}, nil
 }
 
 // ListObjects lista todos os objetos que o usuário pode acessar (delegado para o serviço básico)
@@ -60,25 +70,25 @@ func (ls *LockariService) ListObjects(ctx context.Context, req *ListObjectsReque
 
 // Write cria relacionamentos (tuplas) (delegado para o serviço básico)
 func (ls *LockariService) Write(ctx context.Context, req *WriteRequest) error {
-	if ls.service != nil {
-		return ls.service.Write(ctx, req)
-	}
+	// if ls.service != nil {
+	// 	return ls.service.Write(ctx, req)
+	// }
 	return nil
 }
 
 // Delete remove relacionamentos (delegado para o serviço básico)
 func (ls *LockariService) Delete(ctx context.Context, req *DeleteRequest) error {
-	if ls.service != nil {
-		return ls.service.Delete(ctx, req)
-	}
+	// if ls.service != nil {
+	// 	return ls.service.Delete(ctx, req)
+	// }
 	return nil
 }
 
 // Health verifica se o OpenFGA está disponível (delegado para o serviço básico)
 func (ls *LockariService) Health(ctx context.Context) error {
-	if ls.service != nil {
-		return ls.service.Health(ctx)
-	}
+	// if ls.service != nil {
+	// 	return ls.service.Health(ctx)
+	// }
 	return nil
 }
 
@@ -448,14 +458,14 @@ func (ls *LockariService) setupEnterprisePlanResources(ctx context.Context, user
 
 // === PLAN TYPE AND FEATURES ===
 
-// PlanType representa os tipos de plano
-type PlanType string
+// // PlanType representa os tipos de plano
+// type PlanType string
 
-const (
-	PlanFree       PlanType = "free"
-	PlanPro        PlanType = "pro"
-	PlanEnterprise PlanType = "enterprise"
-)
+// const (
+// 	PlanFree       PlanType = "free"
+// 	PlanPro        PlanType = "pro"
+// 	PlanEnterprise PlanType = "enterprise"
+// )
 
 // getPlanFeatures retorna as funcionalidades para cada plano
 func getPlanFeatures(plan PlanType) []PlanFeature {

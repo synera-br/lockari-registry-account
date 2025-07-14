@@ -11,7 +11,8 @@ type AuthorizationService interface {
 	Check(ctx context.Context, req *CheckRequest) (*CheckResponse, error)
 
 	// CheckBatch verifica múltiplas permissões em uma chamada
-	CheckBatch(ctx context.Context, reqs []*CheckRequest) ([]*CheckResponse, error)
+	// CheckBatch(ctx context.Context, reqs []*CheckRequest) ([]*CheckResponse, error)
+	CheckBatch(ctx context.Context, reqs []*CheckRequest) (*BatchCheckResponse, error)
 
 	// ListObjects lista todos os objetos que o usuário pode acessar
 	ListObjects(ctx context.Context, req *ListObjectsRequest) (*ListObjectsResponse, error)
