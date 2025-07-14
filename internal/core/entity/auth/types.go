@@ -9,7 +9,7 @@ import (
 type User struct {
 	Uid   string `json:"uid" binding:"required"`   // Unique identifier for the user in Firebase Authentication
 	Email string `json:"email" binding:"required"` // Email address of the user
-	Name  string `json:"name,omitempty"`           // Name of the user
+	Name  string `json:"name,omitempty"`           // Optional: Name of the tenant
 	Plan  string `json:"plan,omitempty"`           // Subscription plan of the user
 }
 

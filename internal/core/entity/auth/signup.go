@@ -40,6 +40,12 @@ type SignupFilter struct {
 	Tenant string `json:"tenant,omitempty"`
 }
 
+type Tenant struct {
+	TenantID string `json:"tenant_id,omitempty"` // Optional: Unique identifier for the tenant
+	Name     string `json:"name,omitempty"`      // Optional: Name of the tenant
+	Plan     string `json:"plan,omitempty"`      // Subscription plan of the user
+}
+
 // Signup
 // This event is triggered when a user successfully signs up for the application.
 type Signup struct {
