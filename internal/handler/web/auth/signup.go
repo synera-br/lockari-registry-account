@@ -3,6 +3,7 @@ package webhandler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -85,6 +86,7 @@ func (h *signupHandler) Create(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("Decrypted data:", string(decryptedData))
 	var signup entity.Signup
 	if err := json.Unmarshal(decryptedData, &signup); err != nil {
 		log.Println("Error unmarshalling signup event:", err)

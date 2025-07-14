@@ -1,21 +1,7 @@
-package entity
+package eventtype
 
-import (
-	"errors"
-)
+import "errors"
 
-// User
-// This event is triggered when a user performs an action that requires authentication, such as logging in or signing up.
-type User struct {
-	Uid   string `json:"uid" binding:"required"`   // Unique identifier for the user in Firebase Authentication
-	Email string `json:"email" binding:"required"` // Email address of the user
-	Name  string `json:"name,omitempty"`           // Optional: Name of the tenant
-	Plan  string `json:"plan,omitempty"`           // Subscription plan of the user
-}
-
-
-
-// EventType
 // This struct defines the type of event that is being logged, such as login or signup.
 type EventType string
 
@@ -29,47 +15,6 @@ const (
 )
 
 // IsValid
-// This method validates the User struct to ensure that required fields are present.
-func (u *User) IsValid() error {
-
-	if u == nil {
-		return errors.New("invalid user: user event cannot be nil")
-	}
-
-	if u.Uid == "" {
-		return errors.New("invalid user: uid is required")
-	}
-
-	if u.Email == "" {
-		return errors.New("invalid user: email is required")
-	}
-
-	if u.Plan == "" {
-		return errors.New("invalid user: plan is required")
-	}
-
-	return nil
-}
-
-// IsValid
-// This method validates the Client struct to ensure that required fields are present.
-func (c *Client) IsValid() error {
-
-	if c == nil {
-		return errors.New("invalid client: client event cannot be nil")
-	}
-
-	if c.IpAddress == "" {
-		return errors.New("invalid client: ipAddress is required")
-	}
-
-	if c.UserAgent == "" {
-		return errors.New("invalid client: userAgent is required")
-	}
-	return nil
-}
-
-// IsValid
 // This method validates the EventType to ensure that it is one of the predefined event types.
 func (e *EventType) IsValid() error {
 	switch *e {
@@ -78,6 +23,13 @@ func (e *EventType) IsValid() error {
 	default:
 		return errors.New("invalid event type")
 	}
+}
+
+func (e *EventType) String() string {
+	if e == nil {
+		return ""
+	}
+	return string(*e)
 }
 
 // GetEventType
@@ -128,11 +80,6 @@ func (e *EventType) SetEventType(eventType string) (err error) {
 	return err
 }
 
-// String returns a string representation of the EventType
-func (e EventType) String() string {
-	return string(e)
-}
-
 // IsLoginEvent checks if the event type is a login-related event
 func (e EventType) IsLoginEvent() bool {
 	return e == LOGIN_SUCCESS || e == LOGIN_FAILURE
@@ -146,8 +93,4 @@ func (e EventType) IsSuccessEvent() bool {
 // IsFailureEvent checks if the event type represents a failed operation
 func (e EventType) IsFailureEvent() bool {
 	return e == LOGIN_FAILURE
-}
-
-func (u *User) GetEmail() string {
-	return u.Email
 }
