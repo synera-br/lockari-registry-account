@@ -232,8 +232,10 @@ func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
 		return nil, fmt.Errorf(utils.GenericError, err.Error())
 	}
 	fmt.Println("List SignupEvent - after token validation")
-	_, err = s.auth.GetUserID(ctx, token)
+	userFromToken, err := s.auth.GetUserID(ctx, token)
+	fmt.Println("List SignupEvent - userFromToken", userFromToken)
 	if err != nil {
+		fmt.Println("List SignupEvent - error at GetUserID")
 		return nil, fmt.Errorf("failed to get user ID from token: %s", err.Error())
 	}
 	fmt.Println("List SignupEvent - after getting user ID from token")
