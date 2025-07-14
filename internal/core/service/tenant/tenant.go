@@ -72,7 +72,6 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 
 	// Check if tenant already exists
 	existingTenants, err := s.repo.List(ctx, nil)
-
 	if err != nil {
 		if err.Error() == corev1.TenantAlreadyExists {
 			return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
@@ -80,8 +79,23 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, fmt.Errorf("failed to check existing tenant: %w", err)
 	}
 
-	if existingTenants != nil && existingTenants[0].Tenant.TenantID != "" {
-		return nil, corev1.ErrGenericError("Tenant already exists with the provided details")
+	if len(existingTenants) > 0 {
+
+		for _, existingTenant := range existingTenants {
+			if existingTenant.Tenant.Name == tenant.Tenant.Name {
+				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
+			}
+			if existingTenant.Owner.Email == tenant.Owner.Email {
+				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with email %s already exists", tenant.Owner.Email))
+			}
+			if existingTenant.Tenant.TenantID == tenant.Tenant.TenantID {
+				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with ID %s already exists", tenant.Tenant.TenantID))
+			}
+			if existingTenant.Tenant.Name == tenant.Tenant.Name {
+				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
+			}
+		}
+
 	}
 
 	// Generate tenant ID if not provided
