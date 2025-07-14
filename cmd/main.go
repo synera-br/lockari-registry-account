@@ -248,9 +248,9 @@ func initializeAuthorization(config map[string]interface{}, v *viper.Viper) (aut
 	}
 
 	// 1. Load OpenFGA configuration
-	if err := v.UnmarshalKey("openfga", &config); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal OpenFGA configuration: %w", err)
-	}
+	// if err := v.UnmarshalKey("openfga", &config); err != nil {
+	// 	return nil, fmt.Errorf("failed to unmarshal OpenFGA configuration: %w", err)
+	// }
 
 	c := authorization.Config{
 		APIURL:               config["api_url"].(string),
