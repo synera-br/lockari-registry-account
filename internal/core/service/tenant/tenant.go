@@ -82,9 +82,6 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 	if len(existingTenants) > 0 {
 
 		for _, existingTenant := range existingTenants {
-			if existingTenant.Tenant.Name == tenant.Tenant.Name {
-				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
-			}
 			if existingTenant.Owner.Email == tenant.Owner.Email {
 				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with email %s already exists", tenant.Owner.Email))
 			}
