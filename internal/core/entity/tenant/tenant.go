@@ -145,5 +145,6 @@ func (t *TenantInfo) SetTenantName(name string) error {
 		return errors.New(ErrInvalidTenant)
 	}
 	t.Name = name
+
 	return nil
 }

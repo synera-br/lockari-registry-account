@@ -108,7 +108,7 @@ func (r *tenantEventRepository) Get(ctx context.Context, filters *entity.TenantF
 	if err != nil {
 		return nil, errors.New("failed to get tenant event from database: " + err.Error())
 	}
-	if response == nil || len(response) == 0 {
+	if len(response) == 0 {
 		return nil, fmt.Errorf(corev1.TenantNotFoundError, objectName)
 	}
 
