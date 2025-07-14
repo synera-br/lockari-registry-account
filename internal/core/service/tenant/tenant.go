@@ -79,7 +79,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 	})
 
 	fmt.Println("Error tenant:", err)
-	fmt.Println("Existing tenant:", existingTenant)
+	fmt.Println("Existing tenant:", existingTenant.Tenant.TenantID)
 	if err != nil {
 		if err.Error() == corev1.TenantAlreadyExists {
 			return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
@@ -87,7 +87,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, fmt.Errorf("failed to check existing tenant: %w", err)
 	}
 
-	if existingTenant != nil {
+	if existingTenant != nil && existingTenant.Tenant.TenantID != "" {
 		return nil, corev1.ErrGenericError("Tenant already exists with the provided details")
 	}
 
