@@ -54,7 +54,7 @@ func (s *SignupEvent) Create(ctx context.Context, signupData *entity.Signup) (en
 	}
 
 	if err := signupData.IsValid(); err != nil {
-		return nil, fmt.Errorf("Invalid signup event: %w", err)
+		return nil, fmt.Errorf("invalid signup event: %w", err)
 	}
 
 	// CHECK CONTEXT
@@ -126,18 +126,6 @@ func (s *SignupEvent) Create(ctx context.Context, signupData *entity.Signup) (en
 		}
 		return nil, authorization.NewAuthorizationError("AddUserToTenant", "Failed to add user to tenant in authorization service", err)
 	}
-
-	// SET USER ID IN SIGNUP DATA
-	fmt.Println("Setting user ID in signup data:", signupData.User.Uid)
-	fmt.Println("signup user UID", signup.GetUser().Uid, "user data UID", data["uid"])
-	err = s.authz.SetupVault(ctx, signupData.User.Uid, tenantId, signupData.User.Uid)
-	if err != nil {
-		if rollbackErr := s.auth.SetTenantRollback(ctx, signupData.User.Uid, tenantId); rollbackErr != nil {
-			return nil, fmt.Errorf("failed to set tenant rollback: %w", rollbackErr)
-		}
-		return nil, authorization.NewAuthorizationError("SetupVault", "Failed to setup vault in authorization service", err)
-	}
-	fmt.Println("Vault setup completed successfully")
 
 	// CREATE SIGNUP EVENT
 	result, err := s.repo.Create(ctx, data)

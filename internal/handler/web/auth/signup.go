@@ -85,6 +85,8 @@ func (h *signupHandler) Create(c *gin.Context) {
 		return
 	}
 
+	log.Println("Decrypted signup event data:", string(decryptedData))
+
 	var signup entity.Signup
 	if err := json.Unmarshal(decryptedData, &signup); err != nil {
 		log.Println("Error unmarshalling signup event:", err)
