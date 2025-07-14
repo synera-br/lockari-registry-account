@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/auth"
 	core "github.com/synera-br/lockari-backend-app/internal/core/repository"
@@ -90,6 +91,8 @@ func (r *SignupEvent) List(ctx context.Context, filter database.Conditional) ([]
 		}
 	}
 
+	fmt.Println("Response from database (len):", len(response))
+	fmt.Println("Response from database:", string(response))
 	items, err := r.convertToEntities(response)
 	if err != nil {
 		return nil, err
