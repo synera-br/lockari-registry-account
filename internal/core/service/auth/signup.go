@@ -222,6 +222,7 @@ func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
 	if ctx.Err() != nil {
 		return nil, fmt.Errorf(utils.ContextCancelled, ctx.Err().Error())
 	}
+	fmt.Println("List SignupEvent - after context check")
 
 	// CHECK TOKEN
 	token := utils.GetTokenFromContext(ctx) // Ensure user ID is retrieved from context
@@ -230,11 +231,12 @@ func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
 	if err != nil {
 		return nil, fmt.Errorf(utils.GenericError, err.Error())
 	}
-
+	fmt.Println("List SignupEvent - after token validation")
 	_, err = s.auth.GetUserID(ctx, token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user ID from token: %s", err.Error())
 	}
+	fmt.Println("List SignupEvent - after getting user ID from token")
 
 	// filter := database.Conditional{
 	// 	Field:  "userId",
