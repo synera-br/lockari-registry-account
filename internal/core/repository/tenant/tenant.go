@@ -104,26 +104,15 @@ func (r *tenantEventRepository) Get(ctx context.Context, filters *entity.TenantF
 		objectName = filters.Name
 	}
 
-	var response []byte
-	var err error
-	if len(conditionals) == 0 {
-		response, err = r.db.Get(ctx, r.collection)
-	} else {
-		fmt.Println("Conditionals:", conditionals)
-
-		response, err = r.db.GetByConditional(ctx, conditionals, r.collection)
-		fmt.Println("Error tenant:", err)
-		if err != nil {
-			return nil, errors.New("failed to get tenant event from database: " + err.Error())
-		}
+	response, err := r.db.GetByConditional(ctx, conditionals, r.collection)
+	fmt.Println("Error tenant:", err)
+	if err != nil {
+		return nil, errors.New("failed to get tenant event from database: " + err.Error())
 	}
 	if len(response) == 0 {
 		return nil, fmt.Errorf(corev1.TenantNotFoundError, objectName)
 	}
 
-	fmt.Println("Response tenant:", response)
-	fmt.Println("Response tenant length:", len(response))
-	fmt.Println("Response tenant string:", string(response))
 	tenant, err := r.convertToEntity(response)
 	if err != nil {
 		return nil, errors.New("failed to convert response to tenant entity: " + err.Error())
@@ -133,7 +122,65 @@ func (r *tenantEventRepository) Get(ctx context.Context, filters *entity.TenantF
 }
 
 func (r *tenantEventRepository) List(ctx context.Context, filters []entity.TenantFilter) ([]entity.Tenant, error) {
-	return nil, errors.New("not implemented")
+	if ctx.Err() != nil {
+		return nil, errors.New("context cancelled")
+	}
+
+	var response []byte
+	var err error
+
+	if len(filters) > 0 {
+		conditionals := make([]database.Conditional, len(filters))
+		for i, filter := range filters {
+			if filter.Plan != "" {
+				conditionals[i] = database.Conditional{
+					Field:  "plan",
+					Value:  filter.Plan,
+					Filter: database.FilterEquals,
+				}
+			}
+			if filter.TenantID != "" {
+				conditionals[i] = database.Conditional{
+					Field:  "tenant_id",
+					Value:  filter.TenantID,
+					Filter: database.FilterEquals,
+				}
+			}
+			if filter.Email != "" {
+				conditionals[i] = database.Conditional{
+					Field:  "email",
+					Value:  filter.Email,
+					Filter: database.FilterEquals,
+				}
+			}
+			if filter.Name != "" {
+				conditionals[i] = database.Conditional{
+					Field:  "name",
+					Value:  filter.Name,
+					Filter: database.FilterEquals,
+				}
+			}
+		}
+		response, err = r.db.GetByConditional(ctx, conditionals, r.collection)
+		if err != nil {
+			return nil, errors.New("failed to get tenants by conditional: " + err.Error())
+		}
+	} else {
+		response, err = r.db.Get(ctx, r.collection)
+		if err != nil {
+			return nil, errors.New("failed to get tenants: " + err.Error())
+		}
+	}
+	if len(response) == 0 {
+		return nil, errors.New("no tenants found")
+	}
+
+	tenants, err := r.convertToEntities(response)
+	if err != nil {
+		return nil, errors.New("failed to convert response to tenant entity: " + err.Error())
+	}
+
+	return tenants, nil
 }
 
 func (r *tenantEventRepository) Update(ctx context.Context, tenant *entity.Tenant) (*entity.Tenant, error) {
@@ -161,4 +208,19 @@ func (r *tenantEventRepository) convertToEntity(response []byte) (*entity.Tenant
 
 	return &tenant, nil
 
+}
+
+func (r *tenantEventRepository) convertToEntities(data []byte) ([]entity.Tenant, error) {
+
+	if len(data) == 0 {
+		return nil, errors.New("error to convert tenant data to map")
+	}
+
+	var tenants []entity.Tenant
+	err := json.Unmarshal(data, &tenants)
+	if err != nil {
+		return nil, errors.New("failed to unmarshal tenant data")
+	}
+
+	return tenants, nil
 }

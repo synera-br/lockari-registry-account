@@ -71,12 +71,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 	}
 
 	// Check if tenant already exists
-	existingTenant, err := s.repo.Get(ctx, &entity.TenantFilter{
-		// TenantID: tenant.ID,
-		// Name:     tenant.Tenant.Name,
-		// Plan:     tenant.Tenant.Plan.String(),
-		Email: tenant.Owner.Email,
-	})
+	existingTenants, err := s.repo.List(ctx, nil)
 
 	if err != nil {
 		if err.Error() == corev1.TenantAlreadyExists {
@@ -85,7 +80,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, fmt.Errorf("failed to check existing tenant: %w", err)
 	}
 
-	if existingTenant != nil && existingTenant.Tenant.TenantID != "" {
+	if existingTenants != nil && existingTenants[0].Tenant.TenantID != "" {
 		return nil, corev1.ErrGenericError("Tenant already exists with the provided details")
 	}
 
