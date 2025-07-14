@@ -62,6 +62,11 @@ func (t *Tenant) IsValid() error {
 	if t.UpdatedAt.IsZero() {
 		t.UpdatedAt = time.Now()
 	}
+
+	if t.Tenant.Name == "" {
+		t.Tenant.SetTenantName(t.Owner.GetUsername())
+	}
+
 	return nil
 }
 
@@ -132,5 +137,13 @@ func (ti *TenantInfo) SetTenantID(tenantID *string) error {
 		return errors.New(ErrTenantRequired)
 	}
 
+	return nil
+}
+
+func (t *TenantInfo) SetTenantName(name string) error {
+	if t == nil {
+		return errors.New(ErrInvalidTenant)
+	}
+	t.Name = name
 	return nil
 }
