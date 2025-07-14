@@ -105,6 +105,7 @@ func main() {
 	webhandler_audit.InitializeAuditSystemEventHandler(auditSvc, crypt, authClient, tokenJWT, apiResponse.RouterGroup, apiResponse.MiddlewareHeader)
 
 	log.Println("Starting Lockari Backend App...")
+	log.Println("OpenFGA client initialized successfully", authZ)
 
 	apiResponse.Run(apiResponse.Routes)
 }
