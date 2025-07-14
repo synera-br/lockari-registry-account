@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 
 	"cloud.google.com/go/firestore"
 
@@ -95,7 +94,6 @@ func (db *FirebaseDB) connect(cfg FirebaseConfig) error {
 	}
 
 	db.client = client
-	log.Printf("Successfully connected to Firestore database: %s in project: %s", databaseName, cfg.ProjectID)
 
 	return nil
 }

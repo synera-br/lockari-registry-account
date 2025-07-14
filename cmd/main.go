@@ -236,10 +236,14 @@ func initializeAuth(db database.FirebaseDBInterface) (entity.LoginEventService, 
 }
 
 func initializeAuthorization(config map[string]interface{}, v *viper.Viper) (authorization.LockariAuthorizationService, error) {
-
+	fmt.Println("Initializing OpenFGA client with configuration...")
 	cfg, err := authorization.LoadFromViper(v)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load OpenFGA configuration: %w", err)
+	}
+
+	if cfg == nil {
+		return nil, fmt.Errorf("OpenFGA configuration is nil")
 	}
 
 	if cfg.Validate() != nil {
