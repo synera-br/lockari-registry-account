@@ -248,7 +248,8 @@ func (s *SignupEvent) List(ctx context.Context) ([]entity.SignupEvent, error) {
 	// 	Filter: database.FilterEquals,
 	// }
 	fmt.Println("List SignupEvent - before repo.List")
-	result, err := s.repo.List(ctx, database.Conditional{})
+	filters := make([]database.Conditional, 0)
+	result, err := s.repo.List(ctx, filters)
 	if err != nil {
 		return nil, err
 	}
