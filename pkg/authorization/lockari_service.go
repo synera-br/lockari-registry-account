@@ -216,21 +216,26 @@ func (ls *LockariService) SetupTenant(ctx context.Context, tenantID, ownerID str
 		feats = append(feats, string(feature))
 	}
 
-	err := ls.Write(ctx, &WriteRequest{
-		Tuples: []Tuple{
-			{
-				User:     formatUser(ownerID),
-				Relation: "owner",
-				Object:   formatTenant(tenantID),
-			},
-			{
-				User:     formatUser(ownerID),
-				Relation: "features",
-				Object:   strings.Join(feats, ","),
-			},
+	Tuples := []Tuple{
+		{
+			User:     formatUser(ownerID),
+			Relation: "owner",
+			Object:   formatTenant(tenantID),
 		},
+		{
+			User:     formatUser(ownerID),
+			Relation: "features",
+			Object:   strings.Join(feats, ","),
+		},
+	}
+
+	err := ls.Write(ctx, &WriteRequest{
+		Tuples: Tuples,
 	})
 
+	fmt.Println("Setting up tenant with ID:", tenantID, "and owner:", ownerID, "with features:", feats)
+	fmt.Println("Tuples:", Tuples)
+	fmt.Println("Error:", err)
 	if err != nil {
 		return fmt.Errorf("error setting up tenant: %w", err)
 	}
