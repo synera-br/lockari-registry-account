@@ -161,6 +161,10 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, authorization.NewAuthorizationError("AddUserToTenant", "Failed to add user to tenant in authorization service", err)
 	}
 
+	vaultid := utils.GenerateTenant()
+	s.authz.SetupVault(ctx, vaultid, tenant.Tenant.TenantID, tenant.Owner.Uid)
+	s.authz.GetAuditLogs(ctx, tenant.Owner.GetUid(), vaultid, tenant.Tenant.Plan.GetAuditLogLimit())
+
 	result, err := s.repo.Create(ctx, tenant)
 	if err != nil {
 		// Salvar o erro original antes de tentar rollback

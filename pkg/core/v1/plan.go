@@ -194,3 +194,20 @@ var (
 
 	PlanOnPremise PlanFeatures = PlanEnterprise
 )
+
+func (pf *Plan) GetAuditLogLimit() int {
+	if pf == nil {
+		return 0
+	}
+
+	switch *pf {
+	case FREE_PLAN:
+		return 10 // Free plan has a limit of 10 audit logs
+	case PRO_PLAN:
+		return 500 // Pro plan has a limit of 500 audit logs
+	case ENTERPRISE_PLAN, ON_PREMISE_PLAN:
+		return 100000 // Enterprise and On-Premise plans have a limit of 100,000 audit logs
+	default:
+		return 0 // Invalid plan or no limit
+	}
+}
