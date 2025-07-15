@@ -12,6 +12,11 @@ func SetCollection(ctx context.Context, collection string) (*string, error) {
 		return nil, errors.New("collection is empty")
 	}
 
+	if ctx == nil {
+		return nil, errors.New("context is nil")
+	}
+	fmt.Println("\nSetting collection:", collection)
+	fmt.Println("\nContext UserID:", ctx.Value("UserID"))
 	var col string
 
 	if ctx.Value("UserID") == nil {
