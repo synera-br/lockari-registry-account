@@ -139,6 +139,25 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		tenant.Tenant.SetTenantName(tenant.Owner.GetUsername())
 	}
 
+	tenant.ID = tenant.Tenant.TenantID
+	result, err := s.repo.Create(ctx, tenant)
+	if err != nil {
+		// Salvar o erro original antes de tentar rollback
+		originalErr := err
+		if err := s.auth.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.Tenant.TenantID); err != nil {
+			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
+		}
+		// Tentar rollback do tenant
+		if err := s.auth.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.Tenant.TenantID); err != nil {
+			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
+		}
+		// Sempre retorna o erro original, não o erro do rollback
+		return nil, originalErr
+	}
+	if result == nil {
+		return nil, corev1.ErrGenericError("Failed to create tenant event")
+	}
+
 	features := make([]authorization.PlanFeature, 0)
 	for _, feature := range tenant.Tenant.Plan.GetFeatures() {
 		features = append(features, authorization.PlanFeature(feature))
@@ -167,26 +186,6 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 	s.authz.CreateGroup(ctx, vaultid, tenant.Tenant.TenantID, tenant.Owner.GetEmail())
 	s.authz.AddUserToGroup(ctx, tenant.Owner.GetEmail(), vaultid, authorization.GroupRoleOwner)
 
-	tenant.ID = tenant.Tenant.TenantID
-	result, err := s.repo.Create(ctx, tenant)
-	if err != nil {
-		// Salvar o erro original antes de tentar rollback
-		originalErr := err
-		if err := s.auth.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.Tenant.TenantID); err != nil {
-			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
-		}
-		// Tentar rollback do tenant
-		if err := s.auth.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.Tenant.TenantID); err != nil {
-			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
-		}
-		// Sempre retorna o erro original, não o erro do rollback
-		return nil, originalErr
-	}
-	if result == nil {
-		return nil, corev1.ErrGenericError("Failed to create tenant event")
-	}
-
-	fmt.Print("Tenant created successfully: ", result.ID)
 	return result, nil
 }
 
