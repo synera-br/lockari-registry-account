@@ -36,3 +36,13 @@ func ValidateUUIDOrEmpty(id string) (bool, error) {
 	}
 	return ValidateUUID(id)
 }
+
+// GenerateIDDv7 generates a UUIDv7 string
+// UUIDv7 is a time-based UUID that is suitable for use as a unique identifier
+func GenerateIDv7() string {
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return ""
+	}
+	return fmt.Sprintf("%x", bytes)
+}

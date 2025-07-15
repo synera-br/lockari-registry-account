@@ -163,6 +163,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 
 	vaultid := utils.GenerateTenant()
 	s.authz.SetupVault(ctx, vaultid, tenant.Tenant.TenantID, tenant.Owner.Uid)
+	s.authz.AddUserToGroup(ctx, tenant.Owner.GetEmail(), vaultid, authorization.GroupRoleOwner)
 	s.authz.GetAuditLogs(ctx, tenant.Owner.GetUid(), vaultid, tenant.Tenant.Plan.GetAuditLogLimit())
 
 	result, err := s.repo.Create(ctx, tenant)

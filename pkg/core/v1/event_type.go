@@ -1,4 +1,4 @@
-package features
+package corev1
 
 import "errors"
 
