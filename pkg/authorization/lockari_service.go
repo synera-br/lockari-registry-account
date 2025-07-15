@@ -222,11 +222,6 @@ func (ls *LockariService) SetupTenant(ctx context.Context, tenantID, ownerID str
 			Relation: "owner",
 			Object:   formatTenant(tenantID),
 		},
-		{
-			User:     formatUser(ownerID),
-			Relation: "features",
-			Object:   strings.Join(feats, ","),
-		},
 	}
 
 	err := ls.Write(ctx, &WriteRequest{
