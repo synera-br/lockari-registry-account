@@ -54,6 +54,9 @@ func (r *tenantEventRepository) Create(ctx context.Context, tenant *entity.Tenan
 		return nil, errors.New("failed to save tenant event to database: " + err.Error())
 	}
 
+	fmt.Sprintf("Tenant event created: %s", response)
+	fmt.Sprintf("Tenant event response: %s", string(response))
+
 	return r.convertToEntity(response)
 }
 
@@ -312,7 +315,7 @@ func (r *tenantEventRepository) convertToEntity(response []byte) (*entity.Tenant
 	var tenant entity.Tenant
 	err := json.Unmarshal(response, &tenant)
 	if err != nil {
-		return nil, errors.New("failed to unmarshal tenant data")
+		return nil, errors.New("failed to unmarshal data")
 	}
 
 	return &tenant, nil
