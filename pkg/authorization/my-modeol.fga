@@ -1,0 +1,53 @@
+
+model
+  schema 1.1
+
+type user
+
+type group
+  relations
+    define member: [user]
+
+type tenant
+  relations
+    define tenant_owner_group: [group]   
+    define tenant_manager_group: [group] 
+    define tenant_writer_group: [group]   
+    define tenant_viewer_group: [group]  
+
+    define owner: [user] or member from tenant_owner_group 
+    define manager: [user] or owner or member from tenant_manager_group 
+    define writer: [user] or manager or member from tenant_writer_group
+    define viewer: [user] or writer or member from tenant_viewer_group 
+
+    define can_read_tenant: viewer
+    define can_manage_tenant: manager
+    define can_update_tenant: writer
+    define can_delete_tenant: owner
+
+type vault
+  relations
+    define parent: [tenant]
+
+    define vault_owner_group: [group]
+    define vault_manager_group: [group]
+    define vault_writer_group: [group]
+    define vault_viewer_group: [group]
+
+    define owner: [user] or member from vault_owner_group
+    define manager: [user] or owner or member from vault_manager_group
+    define writer: [user] or manager or member from vault_writer_group
+    define viewer: [user] or writer or member from vault_viewer_group
+
+    define can_view_vault: viewer
+    define can_edit_vault: writer
+    define can_manage_vault_permissions: manager
+    define can_delete_vault: owner
+
+type secret
+  relations
+    define parent: [vault]
+
+    define can_view: [user] or viewer from parent
+    define can_edit: [user] or writer from parent
+    define can_delete: [user] or manager from parent

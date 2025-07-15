@@ -126,7 +126,7 @@ func (ls *LockariService) SetupVault(ctx context.Context, vaultID, tenantID, own
 		},
 		{
 			User:     formatTenant(tenantID),
-			Relation: "tenant",
+			Relation: "parent",
 			Object:   formatVault(vaultID),
 		},
 	}
@@ -209,28 +209,27 @@ func (ls *LockariService) ListAccessibleSecrets(ctx context.Context, userID stri
 // === TENANT OPERATIONS ===
 
 // SetupTenant configura um novo tenant
-func (ls *LockariService) SetupTenant(ctx context.Context, tenantID, ownerID string, features []PlanFeature) error {
+func (ls *LockariService) SetupTenant(ctx context.Context, tenantID, ownerID string, features []PlanFeature, relations []string) error {
 
 	var feats []string
 	for _, feature := range features {
 		feats = append(feats, string(feature))
 	}
 
-	Tuples := []Tuple{
-		{
+	tuples := make([]Tuple, len(relations)+1)
+
+	for i, relation := range relations {
+		tuples[i] = Tuple{
 			User:     formatUser(ownerID),
-			Relation: "owner",
+			Relation: relation,
 			Object:   formatTenant(tenantID),
-		},
+		}
 	}
 
 	err := ls.Write(ctx, &WriteRequest{
-		Tuples: Tuples,
+		Tuples: tuples,
 	})
 
-	fmt.Println("Setting up tenant with ID:", tenantID, "and owner:", ownerID, "with features:", feats)
-	fmt.Println("Tuples:", Tuples)
-	fmt.Println("Error:", err)
 	if err != nil {
 		return fmt.Errorf("error setting up tenant: %w", err)
 	}
@@ -263,11 +262,94 @@ func (ls *LockariService) IsTenantMember(ctx context.Context, userID, tenantID s
 
 // CreateGroup cria um novo grupo
 func (ls *LockariService) CreateGroup(ctx context.Context, groupID, tenantID, ownerID string) error {
-	return nil // Implementação simplificada
+
+	// if groupID == "" {
+	// 	return fmt.Errorf("groupID is required")
+	// }
+
+	// if tenantID == "" {
+	// 	return fmt.Errorf("tenantID is required")
+	// }
+	// if ownerID == "" {
+	// 	return fmt.Errorf("ownerID is required")
+	// }
+
+	// tuple := Tuple{
+	// 	User:     formatUser(ownerID),
+	// 	Relation: "owner",
+	// 	Object:   formatGroup(groupID),
+	// }
+
+	return nil
+}
+
+// AssociateGroupToTenant cria um novo grupo
+func (ls *LockariService) AssociateGroupToTenant(ctx context.Context, groupID, tenantID, ownerID, relation string) error {
+
+	if groupID == "" {
+		return fmt.Errorf("groupID is required")
+	}
+
+	if tenantID == "" {
+		return fmt.Errorf("tenantID is required")
+	}
+
+	if ownerID == "" {
+		return fmt.Errorf("ownerID is required")
+	}
+
+	if relation == "" {
+		return fmt.Errorf("relation is required")
+	}
+
+	tuple := Tuple{
+		User:     formatGroupToTenant(groupID, tenantID),
+		Relation: relation,
+		Object:   formatTenant(tenantID),
+	}
+
+	err := ls.Write(ctx, &WriteRequest{
+		Tuples: []Tuple{tuple},
+	})
+
+	if err != nil {
+		return fmt.Errorf("error creating group: %w", err)
+	}
+
+	return nil
+}
+
+func (ls *LockariService) AssociateUserToGroupAsMember(ctx context.Context, userID, groupID, tenantID string) error {
+	if userID == "" {
+		return fmt.Errorf("userID is required")
+	}
+	if groupID == "" {
+		return fmt.Errorf("groupID is required")
+	}
+	if tenantID == "" {
+		return fmt.Errorf("tenantID is required")
+	}
+
+	tuple := Tuple{
+		User:     formatUser(userID),
+		Relation: "member",
+		Object:   formatGroup(groupID),
+	}
+
+	err := ls.Write(ctx, &WriteRequest{
+		Tuples: []Tuple{tuple},
+	})
+
+	if err != nil {
+		return fmt.Errorf("error associating user to group: %w", err)
+	}
+
+	return nil
 }
 
 // AddUserToGroup adiciona um usuário ao grupo
 func (ls *LockariService) AddUserToGroup(ctx context.Context, userID, groupID string, role GroupRole) error {
+
 	return nil // Implementação simplificada
 }
 
@@ -340,7 +422,18 @@ func (ls *LockariService) ListExternalSharingRequests(ctx context.Context, tenan
 // GetAuditLogs recupera logs de auditoria
 func (ls *LockariService) GetAuditLogs(ctx context.Context, userID, resource string, limit int) ([]AuditEvent, error) {
 
-	return []AuditEvent{}, nil // Implementação simplificada
+	objs, err := ls.ListObjects(ctx, &ListObjectsRequest{
+		User:     formatUser(userID),
+		Relation: "owner",
+		Type:     resource,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error listing objects for audit logs: %w", err)
+	}
+	auditEvents := make([]AuditEvent, 0, len(objs.Objects))
+
+	return auditEvents, nil
 }
 
 // === CACHE OPERATIONS ===
@@ -372,6 +465,14 @@ func formatTenant(tenantID string) string {
 	return fmt.Sprintf("tenant:%s", tenantID)
 }
 
+func formatGroup(groupID string) string {
+	return fmt.Sprintf("group:%s", groupID)
+}
+
+func formatGroupToTenant(groupID, tenantID string) string {
+	return fmt.Sprintf("group:%s/%s", groupID, tenantID)
+}
+
 // extractIDFromObject extrai o ID de um objeto formatado
 func extractIDFromObject(object string) string {
 	parts := strings.Split(object, ":")
@@ -384,10 +485,10 @@ func extractIDFromObject(object string) string {
 // === HELPER METHODS FOR USER/TENANT SETUP ===
 
 // CreateNewUserTenant configura um novo usuário/tenant com plano específico
-func (ls *LockariService) CreateNewUserTenant(ctx context.Context, userID, tenantID string, plan PlanType) error {
+func (ls *LockariService) CreateNewUserTenant(ctx context.Context, userID, tenantID string, plan PlanType, relations []string) error {
 	// 1. Configurar tenant com plano específico
 	features := getPlanFeatures(plan)
-	err := ls.SetupTenant(ctx, tenantID, userID, features)
+	err := ls.SetupTenant(ctx, tenantID, userID, features, relations)
 	if err != nil {
 		return fmt.Errorf("failed to setup tenant: %w", err)
 	}

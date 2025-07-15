@@ -79,9 +79,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	authZ.AddUserToTenant(context.Background(), "tenant-id", "user-id", "role")
-	authZ.SetupTenant(context.Background(), "tenant-id", "role", []authorization.PlanFeature{})
-
 	auditSvc, err := initializeAuditEvent(db, authClient, tokenJWT)
 	if err != nil {
 		log.Fatal(err)

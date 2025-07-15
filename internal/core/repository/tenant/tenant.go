@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
+	"github.com/synera-br/lockari-backend-app/internal/core/repository"
 	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
 	"github.com/synera-br/lockari-backend-app/pkg/database"
 	"github.com/synera-br/lockari-backend-app/pkg/utils"
@@ -188,6 +189,115 @@ func (r *tenantEventRepository) Update(ctx context.Context, tenant *entity.Tenan
 
 func (r *tenantEventRepository) Delete(ctx context.Context, tenantID string) error {
 	return errors.New("not implemented")
+}
+
+func (r *tenantEventRepository) CreateGroup(ctx context.Context, group *entity.UserGroup, tenantID *string) error {
+	if ctx.Err() != nil {
+		return errors.New("context cancelled")
+	}
+
+	if group == nil || group.ID == "" || group.Name == "" {
+		return errors.New("user group is required")
+	}
+
+	if tenantID == nil || *tenantID == "" {
+		return errors.New("tenant ID is required")
+	}
+
+	toMap, err := utils.StructToMap(*group)
+	if err != nil {
+		return errors.New("failed to convert user group to map: " + err.Error())
+	}
+
+	collection, err := repository.SetCollection(ctx, "tenant/"+*tenantID+"/groups")
+	if err != nil {
+		return errors.New("failed to set collection for user group: " + err.Error())
+	}
+
+	response, err := r.db.Create(ctx, toMap, *collection)
+	if err != nil {
+		return errors.New("failed to save user group event to database: " + err.Error())
+	}
+
+	if response == nil {
+		return errors.New("failed to create user group event")
+	}
+
+	return nil
+}
+
+func (r *tenantEventRepository) CreateUser(ctx context.Context, user *entity.Owner, tenantID *string) error {
+	if ctx.Err() != nil {
+		return errors.New("context cancelled")
+	}
+
+	if user == nil || user.Uid == "" || user.Email == "" {
+		return errors.New("user  is required")
+	}
+
+	if tenantID == nil || *tenantID == "" {
+		return errors.New("tenant ID is required")
+	}
+
+	toMap, err := utils.StructToMap(*user)
+	if err != nil {
+		return errors.New("failed to convert user to map: " + err.Error())
+	}
+
+	collection, err := repository.SetCollection(ctx, "tenant/"+*tenantID+"/users")
+	if err != nil {
+		return errors.New("failed to set collection for user: " + err.Error())
+	}
+
+	response, err := r.db.Create(ctx, toMap, *collection)
+	if err != nil {
+		return errors.New("failed to save user event to database: " + err.Error())
+	}
+
+	if response == nil {
+		return errors.New("failed to create user event")
+	}
+
+	return nil
+}
+
+func (r *tenantEventRepository) CreateVault(ctx context.Context, vault *entity.Vault, userID, tenantID *string) error {
+	if ctx.Err() != nil {
+		return errors.New("context cancelled")
+	}
+
+	if vault == nil || vault.ID == "" || vault.Name == "" {
+		return errors.New("vault is required")
+	}
+
+	if userID == nil || *userID == "" {
+		return errors.New("user ID is required")
+	}
+
+	if tenantID == nil || *tenantID == "" {
+		return errors.New("tenant ID is required")
+	}
+
+	toMap, err := utils.StructToMap(*vault)
+	if err != nil {
+		return errors.New("failed to convert vault to map: " + err.Error())
+	}
+
+	collection, err := repository.SetCollection(ctx, "tenant/"+*tenantID+"/vaults")
+	if err != nil {
+		return errors.New("failed to set collection for vault: " + err.Error())
+	}
+
+	response, err := r.db.Create(ctx, toMap, *collection)
+	if err != nil {
+		return errors.New("failed to save vault event to database: " + err.Error())
+	}
+
+	if response == nil {
+		return errors.New("failed to create vault event")
+	}
+
+	return nil
 }
 
 func (r *tenantEventRepository) convertToEntity(response []byte) (*entity.Tenant, error) {

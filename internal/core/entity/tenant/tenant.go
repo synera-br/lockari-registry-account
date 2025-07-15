@@ -20,9 +20,8 @@ const (
 )
 
 type TenantInfo struct {
-	Name     string      `json:"name,omitempty"`      // Name of the tenant
-	TenantID string      `json:"tenant_id,omitempty"` // Unique identifier for the tenant
-	Plan     corev1.Plan `json:"plan,omitempty"`      // Subscription plan of the tenant
+	Name string      `json:"name,omitempty"` // Name of the tenant
+	Plan corev1.Plan `json:"plan,omitempty"` // Subscription plan of the tenant
 }
 
 type Tenant struct {
@@ -68,6 +67,12 @@ func (t *Tenant) IsValid() error {
 		t.Tenant.SetTenantName(t.Owner.GetUsername())
 	}
 
+	if t.ID != "" {
+		if len(t.ID) != 36 {
+			return errors.New(ErrInvalidTenantID)
+		}
+	}
+
 	return nil
 }
 
@@ -100,13 +105,35 @@ func (t *Tenant) GetID() (string, bool) {
 	return t.ID, isValid
 }
 
-func (ti *TenantInfo) IsValid() error {
-	if ti == nil {
+func (t *Tenant) SetTenantID(tenantID *string) error {
+	if t == nil {
 		return errors.New(ErrInvalidTenantInfo)
 	}
 
-	if ti.TenantID == "" {
-		return errors.New(ErrInvalidTenantInfoID)
+	if tenantID == nil {
+		return errors.New(ErrTenantRequired)
+	}
+
+	if *tenantID == "" || len(*tenantID) != 36 {
+		return errors.New(ErrInvalidTenantID)
+	}
+
+	if t.ID != "" {
+		return errors.New(ErrTenantAlreadySet)
+	}
+
+	t.ID = *tenantID
+
+	if t.ID == "" {
+		return errors.New(ErrInvalidTenantID)
+	}
+
+	return nil
+}
+
+func (ti *TenantInfo) IsValid() error {
+	if ti == nil {
+		return errors.New(ErrInvalidTenantInfo)
 	}
 
 	if ti.Plan == "" {
@@ -114,31 +141,6 @@ func (ti *TenantInfo) IsValid() error {
 	}
 
 	ti.toLower()
-	return nil
-}
-
-func (ti *TenantInfo) SetTenantID(tenantID *string) error {
-	if ti == nil {
-		return errors.New(ErrInvalidTenantInfo)
-	}
-
-	if len(*tenantID) != 36 {
-		return errors.New(ErrInvalidTenantID)
-	}
-
-	if ti.TenantID != "" {
-		return errors.New(ErrTenantAlreadySet)
-	}
-
-	if ti.TenantID == *tenantID {
-		return errors.New("invalid signup: tenant is already set to the same value")
-	}
-
-	ti.TenantID = *tenantID
-	if ti.TenantID == "" {
-		return errors.New(ErrTenantRequired)
-	}
-
 	return nil
 }
 

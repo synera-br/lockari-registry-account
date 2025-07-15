@@ -16,13 +16,13 @@ import (
 )
 
 type tenantEventService struct {
-	repo     entity.TenantRepository
-	auth     authenticator.Authenticator
-	tokenJWT tokengen.TokenGenerator
-	authz    authorization.LockariAuthorizationService
-	audit    entity_audit.AuditSystemEventService
-	mu       sync.Mutex
-	wg       sync.WaitGroup
+	repo          entity.TenantRepository
+	authenticator authenticator.Authenticator
+	tokenJWT      tokengen.TokenGenerator
+	authorizer    authorization.LockariAuthorizationService
+	audit         entity_audit.AuditSystemEventService
+	mu            sync.Mutex
+	wg            sync.WaitGroup
 }
 
 func InitializeTenantEventService(repo entity.TenantRepository, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authz authorization.LockariAuthorizationService, audit entity_audit.AuditSystemEventService) (entity.TenantService, error) {
@@ -48,11 +48,11 @@ func InitializeTenantEventService(repo entity.TenantRepository, auth authenticat
 	}
 
 	return &tenantEventService{
-		repo:     repo,
-		auth:     auth,
-		tokenJWT: tokenJWT,
-		authz:    authz,
-		audit:    audit,
+		repo:          repo,
+		authenticator: auth,
+		tokenJWT:      tokenJWT,
+		authorizer:    authz,
+		audit:         audit,
 	}, nil
 }
 
@@ -103,33 +103,11 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// Check if tenant already exists
-	existingTenants, err := s.repo.List(ctx, nil)
-	if err != nil {
-		if err.Error() == corev1.TenantAlreadyExists {
-			return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
-		}
-		return nil, fmt.Errorf("failed to check existing tenant: %w", err)
-	}
-
-	if len(existingTenants) > 0 {
-		for _, existingTenant := range existingTenants {
-			if existingTenant.Owner.Email == tenant.Owner.Email {
-				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with email %s already exists", tenant.Owner.Email))
-			}
-			if existingTenant.Tenant.TenantID == tenant.Tenant.TenantID {
-				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with ID %s already exists", tenant.Tenant.TenantID))
-			}
-			if tenant.Tenant.Name != "" && (existingTenant.Tenant.Name == tenant.Tenant.Name) {
-				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
-			}
-		}
-	}
 
 	// Generate tenant ID if not provided
 	tenantID := utils.GenerateTenant()
-	tenant.Tenant.SetTenantID(&tenantID)
-	if tenant.Tenant.TenantID == "" {
+	tenant.SetTenantID(&tenantID)
+	if tenant.ID == "" {
 		return nil, corev1.ErrGenericError("Failed to generate tenant ID")
 	}
 
@@ -137,49 +115,97 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		tenant.Tenant.SetTenantName(tenant.Owner.GetUsername())
 	}
 
-	tenant.ID = tenant.Tenant.TenantID
-	result, err := s.repo.Create(ctx, tenant)
+	// ##### FIRESTORE #####
+	// create tenant in database
+	result, err := s.createTenantInDB(ctx, tenant)
 	if err != nil {
-		// Salvar o erro original antes de tentar rollback
-		originalErr := err
-		if err := s.auth.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.Tenant.TenantID); err != nil {
-			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
-		}
-		// Tentar rollback do tenant
-		if err := s.auth.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.Tenant.TenantID); err != nil {
-			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
-		}
-		// Sempre retorna o erro original, não o erro do rollback
-		return nil, originalErr
+		return nil, fmt.Errorf("failed to create tenant in database: %w", err)
 	}
+
 	if result == nil {
 		return nil, corev1.ErrGenericError("Failed to create tenant event")
 	}
 
-	features := make([]authorization.PlanFeature, 0)
-	for _, feature := range tenant.Tenant.Plan.GetFeatures() {
-		features = append(features, authorization.PlanFeature(feature))
+	if result.ID != tenantID {
+		return nil, corev1.ErrGenericError("Tenant ID mismatch after creation")
 	}
 
-	err = s.authz.SetupTenant(ctx, tenant.Tenant.TenantID, tenant.Owner.GetEmail(), features)
+	// Set a default group
+	defaultGroup := entity.NewDefaultUserGroup()
+	err = s.createGroupInDB(ctx, defaultGroup, &tenantID)
 	if err != nil {
-		if err := s.auth.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.Tenant.TenantID); err != nil {
+		return nil, fmt.Errorf("failed to create default group in database: %w", err)
+	}
+
+	// Set a user
+	member := entity.GroupMember{
+		ID:   defaultGroup.ID,
+		Name: defaultGroup.Name,
+	}
+
+	err = tenant.Owner.SetDefaultUser(&tenantID, &member)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set default user in tenant: %w", err)
+	}
+
+	defaultUser := tenant.GetOwner()
+	if defaultUser.Uid == "" || defaultUser.Email == "" {
+		return nil, corev1.ErrGenericError("Default user is nil")
+	}
+
+	err = s.createUserInDB(ctx, &defaultUser, &tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create default user in database: %w", err)
+	}
+
+	// Set a vault
+	defaultVault := entity.NewDefaultVault(&tenantID, &defaultUser.Uid)
+	err = s.createVaultInDB(ctx, defaultVault, &defaultUser.Uid, &tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create default vault in database: %w", err)
+	}
+
+	// ##### AUTHORIZATION #####
+	// create tenant in authorization service
+	err = s.createTenantInAuthorization(ctx, result)
+	if err != nil {
+		// Rollback tenant creation in database if authorization fails
+		originalErr := err
+		if rollbackErr := s.authenticator.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.ID); rollbackErr != nil {
+			return nil, fmt.Errorf("failed to rollback tenant creation in database: %w", rollbackErr)
+		}
+		return nil, fmt.Errorf("failed to create tenant in authorization service: %w", originalErr)
+	}
+
+	relation := fmt.Sprintf("%s", entity.TenantGroupOwner)
+	err = s.AssociateGroupToTenant(ctx, &defaultGroup.ID, &tenantID, &defaultUser.Uid, &relation)
+	if err != nil {
+		return nil, fmt.Errorf("failed to associate group to tenant: %w", err)
+	}
+
+	err = s.AssociateUserToVault(ctx, &defaultVault.ID, &tenantID, &defaultUser.Uid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to associate user to vault: %w", err)
+	}
+
+	features := make([]authorization.PlanFeature, 0)
+	realations := []string{"owner", fmt.Sprintf("%s", entity.TenantGroupOwner)}
+
+	err = s.authorizer.SetupTenant(ctx, tenantID, tenant.Owner.GetEmail(), features, realations)
+	if err != nil {
+		if err := s.authenticator.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.ID); err != nil {
 			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
 		}
 		return nil, authorization.NewAuthorizationError("SetupTenant", "Failed to setup tenant in authorization service", err)
 	}
 
-	// Set tenant's owner
-	err = s.authz.AddUserToTenant(ctx, tenant.Owner.GetEmail(), tenant.Tenant.TenantID, authorization.TenantRoleOwner)
+	// ##### ATUALIZAR CUSTOM CLAIMS DO FIREBASE AUTH #####
+	claim := entity.NewTenantCustomClaims(&tenantID, nil, &defaultUser)
+	err = s.SetCustomClaims(ctx, &defaultUser, claim)
 	if err != nil {
-		if err := s.auth.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.Tenant.TenantID); err != nil {
-			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
-		}
-		return nil, authorization.NewAuthorizationError("AddUserToTenant", "Failed to add user to tenant in authorization service", err)
+		return nil, fmt.Errorf("failed to set custom claims for user: %w", err)
 	}
 
-	au, err := s.authz.GetAuditLogs(ctx, tenant.Owner.GetEmail(), "audit-logs", 10)
-	fmt.Println("Audit Logs:", au, "error:", err)
 	return result, nil
 }
 

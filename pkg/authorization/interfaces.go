@@ -62,7 +62,7 @@ type LockariAuthorizationService interface {
 	// === TENANT OPERATIONS ===
 
 	// SetupTenant configura um novo tenant
-	SetupTenant(ctx context.Context, tenantID, ownerID string, features []PlanFeature) error
+	SetupTenant(ctx context.Context, tenantID, ownerID string, features []PlanFeature, relations []string) error
 
 	// AddUserToTenant adiciona um usuário ao tenant
 	AddUserToTenant(ctx context.Context, userID, tenantID string, role TenantRole) error
@@ -80,6 +80,12 @@ type LockariAuthorizationService interface {
 
 	// CreateGroup cria um novo grupo
 	CreateGroup(ctx context.Context, groupID, tenantID, ownerID string) error
+
+	// AssociateGroupToTenant associa um grupo a um tenant
+	AssociateGroupToTenant(ctx context.Context, groupID, tenantID, ownerID, relation string) error
+
+	// AssociateUserToGroupAsMember associa um usuário a um grupo como membro
+	AssociateUserToGroupAsMember(ctx context.Context, userID, groupID, tenantID string) error
 
 	// AddUserToGroup adiciona um usuário ao grupo
 	AddUserToGroup(ctx context.Context, userID, groupID string, role GroupRole) error

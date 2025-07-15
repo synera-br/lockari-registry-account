@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/firestore"
+	"github.com/google/uuid"
 
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -163,31 +164,58 @@ func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection s
 		return nil, err
 	}
 
-	// Check if data is a map and if "updatedAt" is present.
-	// If data is not a map or "updatedAt" is not present, add it.
-	if mapData, ok := data.(map[string]interface{}); ok {
-		if _, exists := mapData["createdAt"]; !exists {
-			mapData["updatedAt"] = firestore.ServerTimestamp
+	var docData map[string]interface{}
+	var err error
+
+	if m, ok := data.(map[string]interface{}); ok {
+		docData = m
+	} else {
+
+		bytes, _ := json.Marshal(data)
+		json.Unmarshal(bytes, &docData)
+		if docData == nil {
+			return nil, fmt.Errorf("invalid data type: cannot convert to map for processing")
 		}
 	}
 
+	// Gerar ID ou usar o existente. Priorize IDs gerados externamente (UUIDv7).
+	docID := ""
+	if idVal, ok := docData["id"]; ok && idVal != nil {
+		if idStr, isStr := idVal.(string); isStr && idStr != "" {
+			docID = idStr
+		}
+	}
+
+	if docID == "" {
+		// Gerar um UUIDv7 se nenhum ID for fornecido no 'data'
+		newUUID, uuidErr := uuid.NewV7()
+		if uuidErr != nil {
+			return nil, fmt.Errorf("falha ao gerar UUIDv7 para o documento: %w", uuidErr)
+		}
+		docID = newUUID.String()
+		docData["id"] = docID // Atualiza o ID no map de dados
+	}
+
+	// Adicionar timestamps de criação e atualização.
+	// firestore.ServerTimestamp é um placeholder que o Firestore preenche no servidor.
+	docData["createdAt"] = firestore.ServerTimestamp
+	docData["updatedAt"] = firestore.ServerTimestamp
+
+	// 2. Criar o documento no Firestore
 	colRef := db.client.Collection(collection)
-	docRef, _, err := colRef.Add(ctx, data)
+	docRef := colRef.Doc(docID)
+
+	_, err = docRef.Set(ctx, docData) // Sem SetOptions significa sobrescrever
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("falha ao criar documento no Firestore com ID %s: %w", docID, err)
 	}
 
-	if mapData, ok := data.(map[string]interface{}); ok {
-		mapData["id"] = docRef.ID
-		data = mapData
-	}
-
-	b, err := json.Marshal(data)
+	b, err := json.Marshal(docData)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("falha ao serializar dados para JSON: %w", err)
 	}
 
-	return b, err
+	return b, nil
 }
 
 // Update modifies an existing document in a default collection.

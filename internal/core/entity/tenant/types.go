@@ -12,6 +12,9 @@ type TenantRepository interface {
 	List(ctx context.Context, filters []TenantFilter) ([]Tenant, error)
 	Update(ctx context.Context, tenant *Tenant) (*Tenant, error)
 	Delete(ctx context.Context, tenantID string) error
+	CreateGroup(ctx context.Context, group *UserGroup, tenantID *string) error
+	CreateUser(ctx context.Context, user *Owner, tenantID *string) error
+	CreateVault(ctx context.Context, vault *Vault, userID, tenantID *string) error
 }
 
 type TenantService interface {

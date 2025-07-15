@@ -97,10 +97,11 @@ func (sp SecretPermission) String() string {
 type TenantRole string
 
 const (
-	TenantRoleOwner  TenantRole = "owner"
-	TenantRoleAdmin  TenantRole = "admin"
-	TenantRoleMember TenantRole = "member"
-	TenantRoleGuest  TenantRole = "guest"
+	TenantRoleOwner   TenantRole = "owner"
+	TenantRoleAdmin   TenantRole = "admin"
+	TenantRoleMember  TenantRole = "member"
+	TenantRoleGuest   TenantRole = "guest"
+	TenantRoleManager TenantRole = "manager"
 )
 
 // AllTenantRoles retorna todos os papéis válidos
