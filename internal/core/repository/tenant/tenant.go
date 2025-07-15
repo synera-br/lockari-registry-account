@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
-	"github.com/synera-br/lockari-backend-app/internal/core/repository"
 	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
 	"github.com/synera-br/lockari-backend-app/pkg/database"
 	"github.com/synera-br/lockari-backend-app/pkg/utils"
@@ -212,12 +211,8 @@ func (r *tenantEventRepository) CreateGroup(ctx context.Context, group *entity.U
 		return errors.New("failed to convert user group to map: " + err.Error())
 	}
 
-	collection, err := repository.SetCollection(ctx, "tenant/"+*tenantID+"/groups")
-	if err != nil {
-		return errors.New("failed to set collection for user group: " + err.Error())
-	}
-
-	response, err := r.db.Create(ctx, toMap, *collection)
+	collection := fmt.Sprintf("tenants/%s/groups", *tenantID)
+	response, err := r.db.Create(ctx, toMap, collection)
 	if err != nil {
 		return errors.New("failed to save user group event to database: " + err.Error())
 	}
@@ -247,12 +242,8 @@ func (r *tenantEventRepository) CreateUser(ctx context.Context, user *entity.Own
 		return errors.New("failed to convert user to map: " + err.Error())
 	}
 
-	collection, err := repository.SetCollection(ctx, "tenant/"+*tenantID+"/users")
-	if err != nil {
-		return errors.New("failed to set collection for user: " + err.Error())
-	}
-
-	response, err := r.db.Create(ctx, toMap, *collection)
+	collection := fmt.Sprintf("tenants/%s/users", *tenantID)
+	response, err := r.db.Create(ctx, toMap, collection)
 	if err != nil {
 		return errors.New("failed to save user event to database: " + err.Error())
 	}
@@ -286,12 +277,8 @@ func (r *tenantEventRepository) CreateVault(ctx context.Context, vault *entity.V
 		return errors.New("failed to convert vault to map: " + err.Error())
 	}
 
-	collection, err := repository.SetCollection(ctx, "tenant/"+*tenantID+"/vaults")
-	if err != nil {
-		return errors.New("failed to set collection for vault: " + err.Error())
-	}
-
-	response, err := r.db.Create(ctx, toMap, *collection)
+	collection := fmt.Sprintf("tenants/%s/vaults", *tenantID)
+	response, err := r.db.Create(ctx, toMap, collection)
 	if err != nil {
 		return errors.New("failed to save vault event to database: " + err.Error())
 	}

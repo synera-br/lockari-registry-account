@@ -16,13 +16,13 @@ func SetCollection(ctx context.Context, collection string) (*string, error) {
 		return nil, errors.New("context is nil")
 	}
 	fmt.Println("\nSetting collection:", collection)
-	fmt.Println("\nContext UserID:", ctx.Value("UserID"))
+	fmt.Println("\nContext UserID:", ctx.Value("token"))
 	var col string
 
-	if ctx.Value("UserID") == nil {
+	if ctx.Value("token") == nil {
 		return nil, errors.New("user id is nil")
 	} else {
-		userID := ctx.Value("UserID").(string)
+		userID := ctx.Value("token").(string)
 		if userID == "" {
 			return nil, errors.New("user id is empty")
 		}
