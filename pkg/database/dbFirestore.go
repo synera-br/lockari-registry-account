@@ -210,8 +210,8 @@ func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection s
 		return nil, fmt.Errorf("falha ao criar documento no Firestore com ID %s: %w", docID, err)
 	}
 
-	fmt.Println("Documento criado com sucesso:", docID)
-	fmt.Println("Dados do documento:", docData)
+	fmt.Println("\nDocumento criado com sucesso:", docID)
+	fmt.Println("\nDados do documento:", docData)
 	b, err := json.Marshal(docData)
 	if err != nil {
 		return nil, fmt.Errorf("falha ao serializar dados para JSON: %w", err)
