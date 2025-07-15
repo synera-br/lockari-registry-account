@@ -178,7 +178,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, authorization.NewAuthorizationError("AddUserToTenant", "Failed to add user to tenant in authorization service", err)
 	}
 
-	au, err := s.authz.GetAuditLogs(ctx, tenant.Owner.Uid, "audit-logs", 10)
+	au, err := s.authz.GetAuditLogs(ctx, tenant.Owner.GetEmail(), "audit-logs", 10)
 	fmt.Println("Audit Logs:", au, "error:", err)
 	return result, nil
 }
