@@ -113,7 +113,6 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 	}
 
 	if len(existingTenants) > 0 {
-
 		for _, existingTenant := range existingTenants {
 			if existingTenant.Owner.Email == tenant.Owner.Email {
 				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with email %s already exists", tenant.Owner.Email))
@@ -125,7 +124,6 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 				return nil, corev1.ErrGenericError(fmt.Sprintf("Tenant with name %s already exists", tenant.Tenant.Name))
 			}
 		}
-
 	}
 
 	// Generate tenant ID if not provided
@@ -180,12 +178,8 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, authorization.NewAuthorizationError("AddUserToTenant", "Failed to add user to tenant in authorization service", err)
 	}
 
-	vaultid := utils.GenerateTenant()
-
-	s.authz.SetupVault(ctx, vaultid, tenant.Tenant.TenantID, tenant.Owner.Uid)
-	s.authz.CreateGroup(ctx, vaultid, tenant.Tenant.TenantID, tenant.Owner.GetEmail())
-	s.authz.AddUserToGroup(ctx, tenant.Owner.GetEmail(), vaultid, authorization.GroupRoleOwner)
-
+	au, err := s.authz.GetAuditLogs(ctx, tenant.Owner.Uid, "audit-logs", 10)
+	fmt.Println("Audit Logs:", au, "error:", err)
 	return result, nil
 }
 
