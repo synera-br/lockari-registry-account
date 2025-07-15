@@ -34,16 +34,8 @@ func (s *tenantEventService) createTenantInDB(ctx context.Context, tenant *entit
 	result, err := s.repo.Create(ctx, tenant)
 	if err != nil {
 		// Salvar o erro original antes de tentar rollback
-		originalErr := err
-		if err := s.authenticator.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.ID); err != nil {
-			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
-		}
-		// Tentar rollback do tenant
-		if err := s.authenticator.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.ID); err != nil {
-			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
-		}
 		// Sempre retorna o erro original, não o erro do rollback
-		return nil, originalErr
+		return nil, fmt.Errorf("failed to create a new tenant in database: %w", err)
 	}
 	if result == nil {
 		return nil, corev1.ErrGenericError("Failed to create tenant event")
