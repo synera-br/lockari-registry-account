@@ -224,12 +224,7 @@ func (ls *LockariService) SetupTenant(ctx context.Context, tenantID, ownerID str
 				Object:   formatTenant(tenantID),
 			},
 			{
-				User:     formatTenant(tenantID),
-				Relation: "tenant",
-				Object:   formatTenant(tenantID),
-			},
-			{
-				User:     formatTenant(tenantID),
+				User:     formatUser(ownerID),
 				Relation: "features",
 				Object:   strings.Join(feats, ","),
 			},
