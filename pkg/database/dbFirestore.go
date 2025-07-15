@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/google/uuid"
@@ -198,8 +199,10 @@ func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection s
 
 	// Adicionar timestamps de criação e atualização.
 	// firestore.ServerTimestamp é um placeholder que o Firestore preenche no servidor.
-	docData["createdAt"] = firestore.ServerTimestamp
-	docData["updatedAt"] = firestore.ServerTimestamp
+	if _, exists := docData["createdAt"]; !exists {
+		docData["createdAt"] = time.Now()
+		docData["updatedAt"] = time.Now()
+	}
 
 	// 2. Criar o documento no Firestore
 	colRef := db.client.Collection(collection)
