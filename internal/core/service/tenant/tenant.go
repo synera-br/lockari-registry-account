@@ -163,14 +163,13 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 
 	vaultid := utils.GenerateTenant()
 	s.authz.SetupVault(ctx, vaultid, tenant.Tenant.TenantID, tenant.Owner.Uid)
-	s.authz.GetAuditLogs(ctx, tenant.Owner.GetUid(), vaultid, tenant.Tenant.Plan.GetAuditLogLimit())
+	au, err := s.authz.GetAuditLogs(ctx, tenant.Owner.GetUid(), vaultid, tenant.Tenant.Plan.GetAuditLogLimit())
+	if err != nil {
+		fmt.Println("Failed to get audit logs:", err)
+	}
+	fmt.Println("Audit logs:", au)
 	s.authz.CreateGroup(ctx, vaultid, tenant.Tenant.TenantID, tenant.Owner.GetEmail())
 	s.authz.AddUserToGroup(ctx, tenant.Owner.GetEmail(), vaultid, authorization.GroupRoleOwner)
-	list, err := s.authz.ListAccessibleVaults(ctx, tenant.Owner.GetEmail())
-	if err != nil {
-		fmt.Println("Failed to list accessible vaults:", err)
-	}
-	fmt.Println("Accessible vaults:", list)
 
 	result, err := s.repo.Create(ctx, tenant)
 	if err != nil {
