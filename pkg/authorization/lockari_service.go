@@ -210,11 +210,42 @@ func (ls *LockariService) ListAccessibleSecrets(ctx context.Context, userID stri
 
 // SetupTenant configura um novo tenant
 func (ls *LockariService) SetupTenant(ctx context.Context, tenantID, ownerID string, features []PlanFeature) error {
-	return nil // Implementação simplificada
+
+	var feats []string
+	for _, feature := range features {
+		feats = append(feats, string(feature))
+	}
+
+	err := ls.Write(ctx, &WriteRequest{
+		Tuples: []Tuple{
+			{
+				User:     formatUser(ownerID),
+				Relation: "owner",
+				Object:   formatTenant(tenantID),
+			},
+			{
+				User:     formatTenant(tenantID),
+				Relation: "tenant",
+				Object:   formatTenant(tenantID),
+			},
+			{
+				User:     formatTenant(tenantID),
+				Relation: "features",
+				Object:   strings.Join(feats, ","),
+			},
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("error setting up tenant: %w", err)
+	}
+
+	return nil
 }
 
 // AddUserToTenant adiciona um usuário ao tenant
 func (ls *LockariService) AddUserToTenant(ctx context.Context, userID, tenantID string, role TenantRole) error {
+
 	return nil // Implementação simplificada
 }
 
@@ -313,6 +344,7 @@ func (ls *LockariService) ListExternalSharingRequests(ctx context.Context, tenan
 
 // GetAuditLogs recupera logs de auditoria
 func (ls *LockariService) GetAuditLogs(ctx context.Context, userID, resource string, limit int) ([]AuditEvent, error) {
+
 	return []AuditEvent{}, nil // Implementação simplificada
 }
 
