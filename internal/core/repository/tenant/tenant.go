@@ -315,9 +315,9 @@ func (r *tenantEventRepository) convertToEntity(response []byte) (*entity.Tenant
 	var tenant entity.Tenant
 	err := json.Unmarshal(response, &tenant)
 	if err != nil {
-		fmt.Println("Tenant struct:", tenant)
-		fmt.Println("Tenant data:", string(response))
-		fmt.Println("Error unmarshalling tenant data:", err)
+		fmt.Println("\nTenant struct:", tenant)
+		fmt.Println("\nTenant data:", string(response))
+		fmt.Println("\nError unmarshalling tenant data:", err)
 		return nil, errors.New("failed to unmarshal data")
 	}
 
