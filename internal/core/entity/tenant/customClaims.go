@@ -1,7 +1,7 @@
 package entity
 
 type TenantCustomClaims struct {
-	TenantID          string              `json:"tenant_id,omitempty"`
+	TenantID          string              `json:"tenantId,omitempty"`
 	Role              []string            `json:"role,omitempty"`
 	PermissionLevel   TenantGroupType     `json:"permissionLevel,omitempty"`
 	GroupMemberships  []GroupMember       `json:"group_memberships,omitempty"`  // Optional: List of group IDs the user belongs to
