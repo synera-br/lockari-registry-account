@@ -21,6 +21,11 @@ func (s *tenantEventService) SetCustomClaims(ctx context.Context, owner *entity.
 	} else {
 		claimsToMap = make(map[string]interface{})
 	}
+
+	if err := s.authenticator.SetTenantId(ctx, owner.Uid, claims.TenantID); err != nil {
+		return err
+	}
+
 	if err := s.authenticator.SetCustomClaims(ctx, owner.Uid, claimsToMap); err != nil {
 		return err
 	}
