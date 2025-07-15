@@ -105,7 +105,6 @@ func (r *tenantEventRepository) Get(ctx context.Context, filters *entity.TenantF
 	}
 
 	response, err := r.db.GetByConditional(ctx, conditionals, r.collection)
-	fmt.Println("Error tenant:", err)
 	if err != nil {
 		return nil, errors.New("failed to get tenant event from database: " + err.Error())
 	}

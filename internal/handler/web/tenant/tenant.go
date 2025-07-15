@@ -3,7 +3,6 @@ package webhandler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -86,7 +85,6 @@ func (h *tenantHandler) Create(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("Decrypted data:", string(decryptedData))
 	var tenant entity.Tenant
 	if err := json.Unmarshal(decryptedData, &tenant); err != nil {
 		log.Println("Error unmarshalling tenant event:", err)
