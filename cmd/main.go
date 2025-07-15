@@ -82,16 +82,12 @@ func main() {
 	authZ.AddUserToTenant(context.Background(), "tenant-id", "user-id", "role")
 	authZ.SetupTenant(context.Background(), "tenant-id", "role", []authorization.PlanFeature{})
 
-	log.Println("authorization OpenFGA...", authZ)
-
-	tenant, err := initializeTenant(db, authClient, tokenJWT, authZ)
+	auditSvc, err := initializeAuditEvent(db, authClient, tokenJWT)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("Tenant service initialized successfully")
-
-	auditSvc, err := initializeAuditEvent(db, authClient, tokenJWT)
+	tenant, err := initializeTenant(db, authClient, tokenJWT, authZ, auditSvc)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -313,7 +309,7 @@ func initializeAuthorization(config map[string]interface{}, v *viper.Viper) (aut
 	return lockariService, nil
 }
 
-func initializeTenant(db database.FirebaseDBInterface, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authZ authorization.LockariAuthorizationService) (entity_tenant.TenantService, error) {
+func initializeTenant(db database.FirebaseDBInterface, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authZ authorization.LockariAuthorizationService, auditSvc entity_audit.AuditSystemEventService) (entity_tenant.TenantService, error) {
 
 	authorization.NewLockariService(authorization.LockariServiceOptions{
 		Service: nil,
@@ -325,7 +321,7 @@ func initializeTenant(db database.FirebaseDBInterface, auth authenticator.Authen
 		return nil, fmt.Errorf("failed to initialize signup event repository: %w", err)
 	}
 
-	svc, err := svc_tenant.InitializeTenantEventService(repo, auth, tokenJWT, authZ)
+	svc, err := svc_tenant.InitializeTenantEventService(repo, auth, tokenJWT, authZ, auditSvc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize tenant event service: %w", err)
 	}

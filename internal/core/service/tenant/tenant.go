@@ -3,7 +3,9 @@ package tenant
 import (
 	"context"
 	"fmt"
+	"time"
 
+	entity_audit "github.com/synera-br/lockari-backend-app/internal/core/entity/audit"
 	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
 	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
 	"github.com/synera-br/lockari-backend-app/pkg/authorization"
@@ -17,9 +19,10 @@ type tenantEventService struct {
 	auth     authenticator.Authenticator
 	tokenJWT tokengen.TokenGenerator
 	authz    authorization.LockariAuthorizationService
+	audit    entity_audit.AuditSystemEventService
 }
 
-func InitializeTenantEventService(repo entity.TenantRepository, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authz authorization.LockariAuthorizationService) (entity.TenantService, error) {
+func InitializeTenantEventService(repo entity.TenantRepository, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authz authorization.LockariAuthorizationService, audit entity_audit.AuditSystemEventService) (entity.TenantService, error) {
 
 	if repo == nil {
 		return nil, corev1.ErrRepositoryNotFound("TenantEventRepository")
@@ -37,11 +40,16 @@ func InitializeTenantEventService(repo entity.TenantRepository, auth authenticat
 		return nil, corev1.ErrRepositoryNotFound("AuthorizationService")
 	}
 
+	if audit == nil {
+		return nil, corev1.ErrRepositoryNotFound("AuditSystemEventService")
+	}
+
 	return &tenantEventService{
 		repo:     repo,
 		auth:     auth,
 		tokenJWT: tokenJWT,
 		authz:    authz,
+		audit:    audit,
 	}, nil
 }
 
@@ -145,6 +153,20 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 	if result == nil {
 		return nil, corev1.ErrGenericError("Failed to create tenant event")
 	}
+
+	go s.audit.Create(ctx, &entity_audit.AuditSystemEvent{
+		EventType: entity_audit.EventType(tenant.EventType),
+		User: entity_audit.User{
+			Email: tenant.Owner.GetEmail(),
+			Name:  tenant.Owner.GetUsername(),
+			Uid:   tenant.Owner.Uid,
+		},
+		ClientInfo: entity_audit.Client{
+			IpAddress: tenant.ClientInfo.IpAddress,
+			UserAgent: tenant.ClientInfo.UserAgent,
+		},
+		Timestamp: tenant.Timestamp.Format(time.RFC3339),
+	})
 
 	return result, nil
 }

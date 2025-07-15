@@ -3,6 +3,7 @@ package entity
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/synera-br/lockari-backend-app/pkg/database"
@@ -62,6 +63,9 @@ func (a *AuditSystemEvent) IsValid() error {
 	if err := a.FailureReason.IsValid(); err != nil {
 		return err
 	}
+
+	a.User.Email = strings.ToLower(a.User.Email)
+	a.User.Name = strings.ToLower(a.User.Name)
 
 	return nil
 }
