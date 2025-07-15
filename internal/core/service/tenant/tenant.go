@@ -3,6 +3,7 @@ package tenant
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	entity_audit "github.com/synera-br/lockari-backend-app/internal/core/entity/audit"
@@ -20,6 +21,8 @@ type tenantEventService struct {
 	tokenJWT tokengen.TokenGenerator
 	authz    authorization.LockariAuthorizationService
 	audit    entity_audit.AuditSystemEventService
+	mu       sync.Mutex
+	wg       sync.WaitGroup
 }
 
 func InitializeTenantEventService(repo entity.TenantRepository, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authz authorization.LockariAuthorizationService, audit entity_audit.AuditSystemEventService) (entity.TenantService, error) {
@@ -55,7 +58,10 @@ func InitializeTenantEventService(repo entity.TenantRepository, auth authenticat
 
 func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) (*entity.Tenant, error) {
 
+	s.wg.Add(1)
+	defer s.wg.Wait()
 	go func() {
+		defer s.wg.Done()
 		s.audit.Create(ctx, &entity_audit.AuditSystemEvent{
 			EventType: entity_audit.EventType(tenant.EventType),
 			User: entity_audit.User{
@@ -95,6 +101,8 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, fmt.Errorf(corev1.GenericError, err)
 	}
 
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	// Check if tenant already exists
 	existingTenants, err := s.repo.List(ctx, nil)
 	if err != nil {
