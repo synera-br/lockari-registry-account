@@ -54,6 +54,23 @@ func InitializeTenantEventService(repo entity.TenantRepository, auth authenticat
 }
 
 func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) (*entity.Tenant, error) {
+
+	go func() {
+		s.audit.Create(ctx, &entity_audit.AuditSystemEvent{
+			EventType: entity_audit.EventType(tenant.EventType),
+			User: entity_audit.User{
+				Email: tenant.Owner.GetEmail(),
+				Name:  tenant.Owner.GetUsername(),
+				Uid:   tenant.Owner.Uid,
+			},
+			ClientInfo: entity_audit.Client{
+				IpAddress: tenant.ClientInfo.IpAddress,
+				UserAgent: tenant.ClientInfo.UserAgent,
+			},
+			Timestamp: tenant.Timestamp.Format(time.RFC3339),
+		})
+	}()
+
 	// Check tenant is valid
 	if tenant == nil {
 		return nil, corev1.ErrGenericError("Tenant is required")
@@ -153,20 +170,6 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 	if result == nil {
 		return nil, corev1.ErrGenericError("Failed to create tenant event")
 	}
-
-	go s.audit.Create(ctx, &entity_audit.AuditSystemEvent{
-		EventType: entity_audit.EventType(tenant.EventType),
-		User: entity_audit.User{
-			Email: tenant.Owner.GetEmail(),
-			Name:  tenant.Owner.GetUsername(),
-			Uid:   tenant.Owner.Uid,
-		},
-		ClientInfo: entity_audit.Client{
-			IpAddress: tenant.ClientInfo.IpAddress,
-			UserAgent: tenant.ClientInfo.UserAgent,
-		},
-		Timestamp: tenant.Timestamp.Format(time.RFC3339),
-	})
 
 	return result, nil
 }
