@@ -9,6 +9,7 @@ import (
 	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
 )
 
+type AuthorizationToken string
 type UserIDContextKey struct {
 	auth.UserProvider
 	Token string
@@ -92,7 +93,13 @@ func GetAuthorizationFromContext(ctx context.Context) (string, error) {
 
 	token := strings.Split(auth, " ")
 	if len(token) != 2 || token[0] != "Bearer" {
-		return "", fmt.Errorf("invalid authorization format, expected 'Bearer <token>', got: %s", auth)
+		originErr := fmt.Errorf("invalid authorization format, expected 'Bearer <token>', got: %s", auth)
+
+		if len(auth) > 16 {
+			return auth, nil
+		}
+
+		return "", originErr
 	}
 
 	return token[1], nil
