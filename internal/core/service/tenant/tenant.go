@@ -253,8 +253,6 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 		}
 	}
 
-	fmt.Println("Tenant found:", responseTenant)
-	fmt.Println("Tenant ID:", tenantID, responseTenant.ID)
 	return &responseTenant, nil
 }
 
