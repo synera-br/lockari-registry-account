@@ -217,8 +217,12 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 		return nil, errors.New(utils.ContextCancelled)
 	}
 
-	token := utils.GetTokenFromContext(ctx) // Ensure user ID is retrieved from context
-	claims, err := s.tokenJWT.Validate(token)
+	token, err := utils.GetAuthorizationFromContext(ctx) // Ensure user ID is retrieved from context
+	if err != nil {
+		return nil, fmt.Errorf(utils.ContextError, err.Error())
+	}
+
+	claims, err := s.authenticator.ValidateToken(ctx, token)
 	if err != nil {
 		return nil, err
 	}

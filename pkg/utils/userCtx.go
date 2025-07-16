@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
@@ -89,7 +90,12 @@ func GetAuthorizationFromContext(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("authorization in context is empty")
 	}
 
-	return auth, nil
+	token := strings.Split(auth, " ")
+	if len(token) != 2 || token[0] != "Bearer" {
+		return "", fmt.Errorf("invalid authorization format, expected 'Bearer <token>', got: %s", auth)
+	}
+
+	return token[1], nil
 }
 
 func GetUserIDFromContext(ctx context.Context) (string, error) {
