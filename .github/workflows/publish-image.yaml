@@ -6,6 +6,7 @@ on:
     branches:
       - "main"
       - "develop"
+      - "feat/*"
 
 env:
   # Base names for services and secrets - User needs to set these in GitHub Secrets

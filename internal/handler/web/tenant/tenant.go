@@ -3,6 +3,7 @@ package webhandler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -24,8 +25,8 @@ type tenantHandler struct {
 type TenantHandlerInterface interface {
 	Create(c *gin.Context)
 	Get(c *gin.Context)
-	List(c *gin.Context)
-	Extras(c *gin.Context)
+	// List(c *gin.Context)
+	// Extras(c *gin.Context)
 }
 
 func InitializeTenantHandler(
@@ -49,15 +50,19 @@ func InitializeTenantHandler(
 
 func (h *tenantHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...gin.HandlerFunc) {
 
-	tenantRoutes := routerGroup.Group("/auth/signup")
+	signup := routerGroup.Group("/auth/signup")
 	middleware = append(middleware, mid.ValidateTokenJWT(h.tokenJWT))
 	for _, mw := range middleware {
-		tenantRoutes.Use(mw)
+		signup.Use(mw)
 	}
 
-	tenantRoutes.POST("", h.Create)
-	tenantRoutes.GET("", h.List)
-	tenantRoutes.GET("/:id", h.Get)
+	signup.POST("", h.Create)
+
+	tenant := routerGroup.Group("/tenant")
+	middleware = append(middleware, mid.ValidateTokenJWT(h.tokenJWT))
+	for _, mw := range middleware {
+		tenant.Use(mw)
+	}
 
 }
 
@@ -104,7 +109,34 @@ func (h *tenantHandler) Create(c *gin.Context) {
 }
 
 func (h *tenantHandler) Get(c *gin.Context) {
-	log.Println("Retrieving tenant event...")
+	token := c.GetHeader("X-TOKEN")
+	fmt.Println(c.Get("token"))
+	fmt.Println(c.Request.Context())
+	fmt.Println(c.Request.Header)
+
+	_, err := h.tokenJWT.Validate(token)
+	if err != nil {
+		log.Println("Error validating tokenJWT:", err)
+		c.JSON(401, gin.H{"error": "Invalid or expired tokenJWT"})
+		return
+	}
+
+	var body cryptserver.CryptData
+	if err := c.ShouldBindJSON(&body); err != nil {
+		log.Println("Error binding JSON:", err)
+		c.JSON(400, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	decryptedData, err := h.encryptor.PayloadData(body.Payload)
+	if err != nil {
+		log.Println("Error decrypting payload:", err)
+		c.JSON(400, gin.H{"error": "Error processing request data"})
+		return
+	}
+
+	fmt.Println("Decrypted Data:", string(decryptedData))
+
 	c.JSON(200, gin.H{"message": "Tenant event retrieved successfully"})
 }
 
