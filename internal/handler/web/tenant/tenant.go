@@ -113,6 +113,8 @@ func (h *tenantHandler) Create(c *gin.Context) {
 }
 
 func (h *tenantHandler) Get(c *gin.Context) {
+	fmt.Println("Retrieving tenant event...")
+	fmt.Println("\n>>>>>> Get Header <<<<<", c.Request.Header)
 	token := c.GetHeader("X-TOKEN")
 	authorizationToken := c.GetHeader("X-AUTHORIZATION")
 	fmt.Println("Token:", token)
