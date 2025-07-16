@@ -114,14 +114,15 @@ func (h *tenantHandler) Create(c *gin.Context) {
 
 func (h *tenantHandler) Get(c *gin.Context) {
 	token := c.GetHeader("X-TOKEN")
-	fmt.Println(c.Get("token"))
-	fmt.Println(c.Request.Context())
-	fmt.Println(c.Request.Header)
 
-	_, err := h.tokenJWT.Validate(token)
+	tokenResult, err := h.authClient.ValidateToken(c.Request.Context(), token)
 	if err != nil {
+		log.Println("Error validating token:", err)
+		c.JSON(401, gin.H{"error": "Invalid or expired token"})
+		return
 	}
 
+	fmt.Println("Token Result:", tokenResult)
 	ctx := context.WithValue(c.Request.Context(), authorizationKey("Authorization"), token)
 	_, err = h.svc.Get(ctx, entity.TenantFilter{})
 	if err != nil {
