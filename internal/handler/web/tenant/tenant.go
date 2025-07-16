@@ -121,17 +121,14 @@ func (h *tenantHandler) Get(c *gin.Context) {
 	}
 
 	authorizationToken := c.GetHeader("X-AUTHORIZATION")
-	fmt.Println("Authorization Token:", authorizationToken)
-	tokenResult, err := h.authClient.ValidateToken(c.Request.Context(), authorizationToken)
+	_, err = h.authClient.ValidateToken(c.Request.Context(), authorizationToken)
 	if err != nil {
 		log.Println("Error validating authorization token:", err)
 		c.JSON(401, gin.H{"error": fmt.Sprintf("Invalid or expired user token: %s", err.Error())})
 		return
 	}
 
-	fmt.Println("Token Result:", tokenResult)
-	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
-	ctx = context.WithValue(ctx, "Authorization2", token)
+	ctx := context.WithValue(c.Request.Context(), "Authorization", authorizationToken)
 	_, err = h.svc.Get(ctx, entity.TenantFilter{})
 	if err != nil {
 		log.Println("Error retrieving tenant event:", err)
