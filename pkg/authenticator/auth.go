@@ -286,8 +286,8 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 	}
 
 	claims := map[string]interface{}{}
-	if roles != nil {
-		claims["roles"] = roles
+	for key, value := range roles {
+		claims[key] = value
 	}
 
 	err := fa.client.SetCustomUserClaims(ctx, uid, claims)
