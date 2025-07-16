@@ -217,9 +217,6 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 		return nil, errors.New(utils.ContextCancelled)
 	}
 
-	fmt.Println("\nContext values", ctx.Value("Authorization2"))
-	fmt.Println("\nContext values", ctx.Value(string("Authorization")))
-
 	token, err := utils.GetAuthorizationFromContext(ctx) // Ensure user ID is retrieved from context
 	if err != nil {
 		return nil, fmt.Errorf(utils.ContextError, err.Error())

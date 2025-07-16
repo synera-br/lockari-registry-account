@@ -132,7 +132,7 @@ func (h *tenantHandler) Get(c *gin.Context) {
 	}
 
 	fmt.Println("Token Result:", tokenResult)
-	ctx := context.WithValue(c.Request.Context(), authorizationKey("Authorization"), token)
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "Authorization2", token)
 	_, err = h.svc.Get(ctx, entity.TenantFilter{})
 	if err != nil {
