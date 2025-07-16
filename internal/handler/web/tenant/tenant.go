@@ -149,7 +149,7 @@ func (h *tenantHandler) Get(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"tenant": responseTenant})
+	c.JSON(http.StatusOK, gin.H{"payload": responseTenant})
 }
 
 func (h *tenantHandler) List(c *gin.Context) {
