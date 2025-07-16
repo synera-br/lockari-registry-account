@@ -123,6 +123,7 @@ func (h *tenantHandler) Get(c *gin.Context) {
 	}
 
 	authorizationToken := c.GetHeader("X-AUTHORIZATION")
+	fmt.Println("Authorization Token:", authorizationToken)
 	tokenResult, err := h.authClient.ValidateToken(c.Request.Context(), authorizationToken)
 	if err != nil {
 		log.Println("Error validating authorization token:", err)
