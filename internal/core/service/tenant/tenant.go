@@ -228,7 +228,14 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 	}
 
 	fmt.Println("Claims:", claims)
+	if claims == nil {
+		return nil, errors.New("claims cannot be nil")
+	}
 
+	fmt.Println("\nClaims:", claims)
+	for k, v := range claims {
+		fmt.Printf("Key: %s, Value: %v\n", k, v)
+	}
 	tenantID, ok := claims["tenant_id"].(string)
 	if !ok {
 		return nil, fmt.Errorf("tenant_id not found in claims")
