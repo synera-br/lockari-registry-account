@@ -114,6 +114,8 @@ func (h *tenantHandler) Create(c *gin.Context) {
 
 func (h *tenantHandler) Get(c *gin.Context) {
 	token := c.GetHeader("X-TOKEN")
+	authorizationToken := c.GetHeader("X-AUTHORIZATION")
+	fmt.Println("Authorization Token:", authorizationToken)
 
 	tokenResult, err := h.authClient.ValidateToken(c.Request.Context(), token)
 	if err != nil {
