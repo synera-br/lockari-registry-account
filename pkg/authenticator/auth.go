@@ -317,7 +317,7 @@ func (fa *firebaseAuthenticator) ValidateToken(ctx context.Context, authToken st
 	}
 
 	// Verify the ID token
-	verifiedToken, err := fa.client.VerifyIDToken(ctx, authToken)
+	verifiedToken, err := fa.client.VerifyIDToken(ctx, result[1])
 	if err != nil {
 		return nil, fmt.Errorf("error verifying ID token: %w", err)
 	}
