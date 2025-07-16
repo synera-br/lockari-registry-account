@@ -242,10 +242,12 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tenant: %w", err)
 	}
+
 	if response == nil {
 		return nil, corev1.ErrGenericError("Tenant not found")
 	}
 
+	fmt.Println("Tenant found:", response)
 	return response, nil
 }
 
