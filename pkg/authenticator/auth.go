@@ -311,6 +311,11 @@ func (fa *firebaseAuthenticator) ValidateToken(ctx context.Context, authToken st
 		return nil, ErrClientNotInit
 	}
 
+	result := strings.Split(authToken, " ")
+	if len(result) != 2 || result[0] != "Bearer" {
+		return nil, fmt.Errorf("invalid auth token format, expected 'Bearer <token>', got: %s", authToken)
+	}
+
 	// Verify the ID token
 	verifiedToken, err := fa.client.VerifyIDToken(ctx, authToken)
 	if err != nil {
