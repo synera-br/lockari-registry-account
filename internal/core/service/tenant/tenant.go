@@ -227,37 +227,35 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 		return nil, err
 	}
 
-	fmt.Println("Claims:", claims)
 	if claims == nil {
 		return nil, errors.New("claims cannot be nil")
 	}
 
-	fmt.Println("\nClaims:", claims)
-	for k, v := range claims {
-		fmt.Printf("Key: %s, Value: %v\n", k, v)
-	}
 	tenantID, ok := claims["tenant_id"].(string)
 	if !ok {
 		return nil, fmt.Errorf("tenant_id not found in claims")
 	}
 
-	filters.TenantID = tenantID
-
-	if err := filters.IsValid(); err != nil {
-		return nil, fmt.Errorf(corev1.GenericError, err)
-	}
-
-	response, err := s.repo.Get(ctx, &filters)
+	response, err := s.repo.List(ctx, []entity.TenantFilter{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tenant: %w", err)
 	}
 
-	if response == nil {
+	if len(response) == 0 {
 		return nil, corev1.ErrGenericError("Tenant not found")
 	}
 
-	fmt.Println("Tenant found:", response)
-	return response, nil
+	var responseTenant entity.Tenant
+	for _, tenant := range response {
+		if tenant.ID == tenantID {
+			responseTenant = tenant
+			break
+		}
+	}
+
+	fmt.Println("Tenant found:", responseTenant)
+	fmt.Println("Tenant ID:", tenantID, responseTenant.ID)
+	return &responseTenant, nil
 }
 
 func (s *tenantEventService) List(ctx context.Context, filters []entity.TenantFilter) ([]entity.Tenant, error) {
