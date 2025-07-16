@@ -15,8 +15,6 @@ import (
 	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
 )
 
-type authorizationKey string
-
 type tenantHandler struct {
 	svc        entity.TenantService
 	encryptor  cryptserver.CryptDataInterface
