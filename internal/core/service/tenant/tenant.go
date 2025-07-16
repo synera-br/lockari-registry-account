@@ -230,6 +230,11 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 	fmt.Println("Claims:", claims)
 	for k, v := range claims {
 		fmt.Printf("Key: %s, Value: %v\n", k, v)
+		if k == "roles" {
+			for k2, v2 := range v.(map[string]interface{}) {
+				fmt.Printf("Key: %s, Value: %v\n", k2, v2)
+			}
+		}
 	}
 
 	tenantID, ok := claims["tenant_id"].(string)
