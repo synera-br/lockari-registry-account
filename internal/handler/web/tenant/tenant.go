@@ -149,7 +149,27 @@ func (h *tenantHandler) Get(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"payload": responseTenant})
+	if responseTenant == nil {
+		log.Println("Response tenant is nil")
+		c.JSON(404, gin.H{"error": "Tenant not found"})
+		return
+	}
+
+	b, err := json.Marshal(responseTenant)
+	if err != nil {
+		log.Println("Error marshalling tenant response:", err)
+		c.JSON(500, gin.H{"error": "Failed to marshal tenant response"})
+		return
+	}
+
+	payload, err := h.encryptor.EncryptPayload(b)
+	if err != nil {
+		log.Println("Error encrypting tenant response:", err)
+		c.JSON(500, gin.H{"error": "Failed to encrypt tenant response"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"payload": payload})
 }
 
 func (h *tenantHandler) List(c *gin.Context) {
