@@ -15,6 +15,8 @@ import (
 	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
 )
 
+type authorizationKey string
+
 type tenantHandler struct {
 	svc        entity.TenantService
 	encryptor  cryptserver.CryptDataInterface
@@ -118,26 +120,18 @@ func (h *tenantHandler) Get(c *gin.Context) {
 
 	_, err := h.tokenJWT.Validate(token)
 	if err != nil {
-		log.Println("Error validating tokenJWT:", err)
-		c.JSON(401, gin.H{"error": "Invalid or expired tokenJWT"})
-		return
 	}
 
-	var body cryptserver.CryptData
-	if err := c.ShouldBindJSON(&body); err != nil {
-		log.Println("Error binding JSON:", err)
-		c.JSON(400, gin.H{"error": "Invalid request payload"})
-		return
-	}
-
-	decryptedData, err := h.encryptor.PayloadData(body.Payload)
+	ctx := context.WithValue(c.Request.Context(), authorizationKey("Authorization"), token)
+	_, err = h.svc.Get(ctx, entity.TenantFilter{})
 	if err != nil {
-		log.Println("Error decrypting payload:", err)
-		c.JSON(400, gin.H{"error": "Error processing request data"})
+		log.Println("Error retrieving tenant event:", err)
+		c.JSON(500, gin.H{"error": "Failed to retrieve tenant event"})
 		return
 	}
 
-	fmt.Println("Decrypted Data:", string(decryptedData))
+	c.JSON(200, gin.H{"message": "Tenant event retrieved successfully"})
+	h.svc.Get(ctx, entity.TenantFilter{})
 
 	c.JSON(200, gin.H{"message": "Tenant event retrieved successfully"})
 }

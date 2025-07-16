@@ -2,6 +2,7 @@ package tenant
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -210,6 +211,22 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 }
 
 func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilter) (*entity.Tenant, error) {
+
+	// CONTEXT
+	if ctx.Err() != nil {
+		return nil, errors.New(utils.ContextCancelled)
+	}
+
+	token := utils.GetTokenFromContext(ctx) // Ensure user ID is retrieved from context
+	claims, err := s.tokenJWT.Validate(token)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("Filters:", filters)
+	fmt.Println("Token:", token)
+	fmt.Println("Claims:", claims)
+
 	return nil, nil
 }
 
