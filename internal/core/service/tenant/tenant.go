@@ -227,11 +227,26 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 		return nil, err
 	}
 
-	fmt.Println("Filters:", filters)
-	fmt.Println("Token:", token)
-	fmt.Println("Claims:", claims)
+	tenantID, ok := claims["tenant_id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("tenant_id not found in claims")
+	}
 
-	return nil, nil
+	filters.TenantID = tenantID
+
+	if err := filters.IsValid(); err != nil {
+		return nil, fmt.Errorf(corev1.GenericError, err)
+	}
+
+	response, err := s.repo.Get(ctx, &filters)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tenant: %w", err)
+	}
+	if response == nil {
+		return nil, corev1.ErrGenericError("Tenant not found")
+	}
+
+	return response, nil
 }
 
 func (s *tenantEventService) List(ctx context.Context, filters []entity.TenantFilter) ([]entity.Tenant, error) {
