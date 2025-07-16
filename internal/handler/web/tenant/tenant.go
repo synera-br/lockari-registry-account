@@ -129,22 +129,32 @@ func (h *tenantHandler) Get(c *gin.Context) {
 	}
 
 	ctx := context.WithValue(c.Request.Context(), "Authorization", authorizationToken)
-	_, err = h.svc.Get(ctx, entity.TenantFilter{})
+	tenant, err := h.svc.Get(ctx, entity.TenantFilter{})
 	if err != nil {
 		log.Println("Error retrieving tenant event:", err)
 		c.JSON(500, gin.H{"error": "Failed to retrieve tenant event"})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Tenant event retrieved successfully"})
-	h.svc.Get(ctx, entity.TenantFilter{})
+	if tenant == nil {
+		log.Println("Tenant not found")
+		c.JSON(404, gin.H{"error": "Tenant not found"})
+		return
+	}
 
-	c.JSON(200, gin.H{"message": "Tenant event retrieved successfully"})
+	responseTenant, err := NewTenantDetailsResponse(tenant)
+	if err != nil {
+		log.Println("Error creating tenant details response:", err)
+		c.JSON(500, gin.H{"error": "Failed to create tenant details response"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"tenant": responseTenant})
 }
 
 func (h *tenantHandler) List(c *gin.Context) {
 	log.Println("Listing tenant events...")
-	c.JSON(200, gin.H{"message": "Tenant events listed successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Tenant events listed successfully"})
 }
 
 func (h *tenantHandler) Extras(c *gin.Context) {
