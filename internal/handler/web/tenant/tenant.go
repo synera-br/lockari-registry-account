@@ -64,6 +64,8 @@ func (h *tenantHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...
 		tenant.Use(mw)
 	}
 
+	tenant.GET("/", h.Get)
+
 }
 
 func (h *tenantHandler) Create(c *gin.Context) {
