@@ -120,9 +120,9 @@ func (h *tenantHandler) Get(c *gin.Context) {
 	fmt.Println("Token:", token)
 	fmt.Println("Authorization Token:", authorizationToken)
 
-	tokenResult, err := h.authClient.ValidateToken(c.Request.Context(), token)
+	tokenResult, err := h.authClient.ValidateToken(c.Request.Context(), authorizationToken)
 	if err != nil {
-		claims, err := h.tokenJWT.Validate(authorizationToken)
+		claims, err := h.tokenJWT.Validate(token)
 		if err != nil {
 			log.Println("Error validating token:", err)
 			c.JSON(401, gin.H{"error": "Invalid or expired token"})
