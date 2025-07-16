@@ -91,18 +91,17 @@ func GetAuthorizationFromContext(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("authorization in context is empty")
 	}
 
-	token := strings.Split(auth, " ")
-	if len(token) != 2 || token[0] != "Bearer" {
-		originErr := fmt.Errorf("invalid authorization format, expected 'Bearer <token>', got: %s", auth)
-
-		if len(auth) > 16 {
-			return auth, nil
+	if strings.Contains(auth, "Bearer ") {
+		token := strings.Split(auth, " ")
+		if len(token) != 2 || token[0] != "Bearer" {
+			originErr := fmt.Errorf("invalid authorization format, expected 'Bearer <token>', got: %s", auth)
+			return "", originErr
 		}
 
-		return "", originErr
+		return token[1], nil
 	}
 
-	return token[1], nil
+	return auth, nil
 }
 
 func GetUserIDFromContext(ctx context.Context) (string, error) {
