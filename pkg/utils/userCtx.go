@@ -102,7 +102,8 @@ func GetAuthorizationFromContext(ctx context.Context) (string, error) {
 		fmt.Println("\n", " token[0] != Bearer", token[0], token[0] != "Bearer")
 		fmt.Println("\n token[0] != Bearer", len(token) != 2 || token[0] != "Bearer")
 		if len(token) != 2 || token[0] != "Bearer" {
-			fmt.Println("Invalid authorization format, expected 'Bearer <token>', got:", auth)
+			fmt.Println("\nInvalid authorization format, expected 'Bearer <token>', got:", auth)
+			fmt.Println("\nReturning error")
 			originErr := fmt.Errorf("invalid authorization format, expected 'Bearer <token>', got: %s", auth)
 			return "", originErr
 		}
