@@ -92,6 +92,7 @@ func GetAuthorizationFromContext(ctx context.Context) (string, error) {
 	}
 
 	if strings.Contains(auth, "Bearer ") {
+		fmt.Println("Authorization contains Bearer", auth)
 		token := strings.Split(auth, " ")
 		if len(token) != 2 || token[0] != "Bearer" {
 			originErr := fmt.Errorf("invalid authorization format, expected 'Bearer <token>', got: %s", auth)
@@ -101,6 +102,7 @@ func GetAuthorizationFromContext(ctx context.Context) (string, error) {
 		return token[1], nil
 	}
 
+	fmt.Println("Authorization does not contain Bearer", auth)
 	return auth, nil
 }
 
