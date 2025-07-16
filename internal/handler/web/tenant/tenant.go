@@ -113,23 +113,20 @@ func (h *tenantHandler) Create(c *gin.Context) {
 }
 
 func (h *tenantHandler) Get(c *gin.Context) {
-	fmt.Println("Retrieving tenant event...")
-	fmt.Println("\n>>>>>> Get Header <<<<<", c.Request.Header)
-	token := c.GetHeader("X-TOKEN")
-	authorizationToken := c.GetHeader("X-AUTHORIZATION")
-	fmt.Println("Token:", token)
-	fmt.Println("Authorization Token:", authorizationToken)
 
+	token := c.GetHeader("X-TOKEN")
+	claims, err := h.tokenJWT.Validate(token)
+	if err != nil {
+		log.Println("Error validating tokenJWT:", err)
+		c.JSON(401, gin.H{"error": "Invalid or expired app tokenJWT"})
+		return
+	}
+	fmt.Println("Claims:", claims)
+
+	authorizationToken := c.GetHeader("X-AUTHORIZATION")
 	tokenResult, err := h.authClient.ValidateToken(c.Request.Context(), authorizationToken)
 	if err != nil {
-		claims, err := h.tokenJWT.Validate(token)
-		if err != nil {
-			log.Println("Error validating token:", err)
-			c.JSON(401, gin.H{"error": "Invalid or expired token"})
-			return
-		}
-		fmt.Println("Claims:", claims)
-		c.JSON(401, gin.H{"error": "Invalid or expired token"})
+		c.JSON(401, gin.H{"error": "Invalid or expired user token"})
 		return
 	}
 
