@@ -91,7 +91,7 @@ func GetAuthorizationFromContext(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("authorization in context is empty")
 	}
 
-	if strings.Contains(auth, "Bearer ") {
+	if strings.HasPrefix(auth, "Bearer") {
 		fmt.Println("Authorization contains Bearer", auth)
 		token := strings.Split(auth, " ")
 		fmt.Println("\nToken:", token)
