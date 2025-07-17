@@ -231,6 +231,7 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 	}
 
 	fmt.Println("\nGetting tenant for user:", claims)
+	fmt.Println("\nGetting claims with map:", authenticator.ToMap(claims))
 
 	if claims == nil {
 		return nil, errors.New("claims cannot be nil")
