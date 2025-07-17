@@ -98,7 +98,6 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 
 	// Get token of application (JWT)
 	appToken := utils.GetTokenFromContext(ctx)
-
 	_, err := s.tokenJWT.Validate(appToken)
 	if err != nil {
 		return nil, fmt.Errorf(corev1.GenericError, err)
