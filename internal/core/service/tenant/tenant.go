@@ -227,6 +227,8 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 		return nil, err
 	}
 
+	fmt.Println("Claims:", claims)
+
 	if claims == nil {
 		return nil, errors.New("claims cannot be nil")
 	}
