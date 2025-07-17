@@ -388,17 +388,22 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 		return errors.New("roles cannot be empty")
 	}
 
-	if claims["tenant_id"] == nil {
+	if claims["custom_claims"] == nil {
+		return errors.New("custom claims are required")
+	}
+
+	custom, ok := claims["custom_claims"].(map[string]interface{})
+	if !ok {
+		return errors.New("custom claims must be a map")
+	}
+
+	if custom["tenant_id"] == nil {
 		return errors.New("tenant claim is required")
 	}
 
 	fmt.Println("Validate claims for user:", uid)
 	for k, v := range claims {
 		fmt.Printf("Setting claim %s: %v\n", k, v)
-	}
-
-	if claims["custom_claims"] == nil {
-		claims["custom_claims"] = claims
 	}
 
 	err := fa.client.SetCustomUserClaims(ctx, uid, claims)
