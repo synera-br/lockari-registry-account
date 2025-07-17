@@ -288,7 +288,7 @@ func (fa *firebaseAuthenticator) SetTenantRollback(ctx context.Context, uid stri
 	return nil
 }
 
-func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string, roles map[string]interface{}) error {
+func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string, claims map[string]interface{}) error {
 	if fa.client == nil {
 		return ErrClientNotInit
 	}
@@ -301,13 +301,8 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 		return errors.New("tenantId cannot be empty")
 	}
 
-	if len(roles) < 1 {
+	if len(claims) < 1 {
 		return errors.New("roles cannot be empty")
-	}
-
-	claims := map[string]interface{}{}
-	for key, value := range roles {
-		claims[key] = value
 	}
 
 	err := fa.client.SetCustomUserClaims(ctx, uid, claims)
@@ -316,7 +311,7 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 		return fmt.Errorf("error setting custom user claims: %w", err)
 	}
 
-	log.Printf("Successfully set custom claims for user %s. Role: %s", uid, roles)
+	log.Printf("Successfully set custom claims for user %s. Role: %s", uid, claims)
 
 	return nil
 }
