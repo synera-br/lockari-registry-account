@@ -397,6 +397,10 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 		fmt.Printf("Setting claim %s: %v\n", k, v)
 	}
 
+	if claims["custom_claims"] == nil {
+		claims["custom_claims"] = claims
+	}
+
 	err := fa.client.SetCustomUserClaims(ctx, uid, claims)
 	if err != nil {
 		log.Printf("Error setting custom user claims: %v", err)

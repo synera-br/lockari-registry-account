@@ -20,7 +20,7 @@ func (s *tenantEventService) SetCustomClaims(ctx context.Context, owner *entity.
 		return corev1.ErrGenericError("claims cannot be nil")
 	}
 
-	if claims.TenantID == "" {
+	if claims.CustomClaims.TenantID == "" {
 		return corev1.ErrGenericError("tenantID cannot be empty")
 	}
 

@@ -2,12 +2,16 @@ package entity
 
 import "fmt"
 
-type TenantCustomClaims struct {
+type CustomClaims struct {
 	TenantID          string              `json:"tenant_id,omitempty"`
 	Role              []string            `json:"role,omitempty"`
 	PermissionLevel   TenantGroupType     `json:"permission_level,omitempty"`
 	GroupMemberships  []GroupMember       `json:"group_memberships,omitempty"`  // Optional: List of group IDs the user belongs to
 	TenantMemberships []TenantMemberships `json:"tenant_memberships,omitempty"` // Optional: List of tenant IDs the user belongs to
+}
+
+type TenantCustomClaims struct {
+	CustomClaims CustomClaims `json:"custom_claims,omitempty"`
 }
 
 func NewTenantCustomClaims(tenantID *string, role []string, owner *Owner) *TenantCustomClaims {
@@ -39,11 +43,13 @@ func NewTenantCustomClaims(tenantID *string, role []string, owner *Owner) *Tenan
 	tenants = append(tenants, *tenant)
 
 	return &TenantCustomClaims{
-		TenantID:          *tenantID,
-		Role:              role,
-		PermissionLevel:   TenantGroupOwner,
-		GroupMemberships:  owner.GroupMemberships,
-		TenantMemberships: tenants,
+		CustomClaims: CustomClaims{
+			TenantID:          *tenantID,
+			Role:              role,
+			PermissionLevel:   TenantGroupOwner,
+			GroupMemberships:  owner.GroupMemberships,
+			TenantMemberships: tenants,
+		},
 	}
 }
 
@@ -53,16 +59,21 @@ func (c *TenantCustomClaims) ToMap() map[string]interface{} {
 		return map[string]interface{}{}
 	}
 
-	if c.TenantID == "" {
+	if c.CustomClaims.TenantID == "" {
 		fmt.Println("TenantID is empty, returning empty map")
 		return map[string]interface{}{}
 	}
 
-	return map[string]interface{}{
-		"tenant_id":          c.TenantID,
-		"role":               c.Role,
-		"permission_level":   c.PermissionLevel,
-		"group_memberships":  c.GroupMemberships,
-		"tenant_memberships": c.TenantMemberships,
+	fmt.Println("Converting TenantCustomClaims to map:", c.CustomClaims)
+	custom := map[string]interface{}{}
+	custom["custom_claims"] = map[string]interface{}{
+
+		"tenant_id":          c.CustomClaims.TenantID,
+		"role":               c.CustomClaims.Role,
+		"permission_level":   c.CustomClaims.PermissionLevel,
+		"group_memberships":  c.CustomClaims.GroupMemberships,
+		"tenant_memberships": c.CustomClaims.TenantMemberships,
 	}
+
+	return custom
 }
