@@ -391,6 +391,9 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 		return errors.New("roles cannot be empty")
 	}
 
+	fmt.Println("\nGetting claims for user:", claims)
+	fmt.Println("\nGetting custom claims for user:", claims["custom_claims"])
+
 	if claims["custom_claims"] == nil {
 		fmt.Println("\nValidate claims for user:", uid)
 		return errors.New("custom claims are required")
