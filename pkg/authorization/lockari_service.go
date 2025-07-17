@@ -277,24 +277,26 @@ func (ls *LockariService) CanAssignRoleFromTenant(ctx context.Context, userID, t
 	return response.Allowed, nil
 }
 
-func (ls *LockariService) ListPermissionFromTenant(ctx context.Context, userID string) (interface{}, error) {
+func (ls *LockariService) ListPermissionFromTenant(ctx context.Context, tenantID string) (interface{}, error) {
 
-	obj, err := ls.ListObjects(ctx, &ListObjectsRequest{
-		User: formatUser(userID),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("error listing objects for user %s: %w", userID, err)
+	relations := []string{"owner", "admin", "member", "viewer"}
+
+	for _, relation := range relations {
+		req := &ListObjectsRequest{
+			User:     formatTenant(tenantID),
+			Relation: relation,
+		}
+
+		response, err := ls.ListObjects(ctx, req)
+		if err != nil {
+			fmt.Println("\n [ListPermissionFromTenant] Error listing objects:", err)
+		}
+
+		if len(response.Objects) > 0 {
+			fmt.Println("\n [ListPermissionFromTenant] Found objects for relation:", relation, "in tenant:", tenantID)
+		}
+		fmt.Println("\n [ListPermissionFromTenant] Objects for relation:", relation, "in tenant:", tenantID, ":", response.Objects)
 	}
-
-	if obj == nil || len(obj.Objects) == 0 {
-		return nil, fmt.Errorf("no objects found for user %s", userID)
-	}
-
-	for _, object := range obj.Objects {
-		fmt.Println("\n [LockariService] Object found:", object)
-	}
-
-	tenantID := extractIDFromObject(obj.Objects[0])
 
 	return tenantID, nil
 }
@@ -673,3 +675,112 @@ func getPlanFeatures(plan PlanType) []PlanFeature {
 }
 
 // === EXISTING HELPER METHODS ===
+
+// ListAllTenantPermissions lista todas as permissions/relacionamentos de um tenant específico
+func (ls *LockariService) ListAllTenantPermissions(ctx context.Context, tenantID string) (*TenantPermissionsReport, error) {
+	if tenantID == "" {
+		return nil, fmt.Errorf("tenantID is required")
+	}
+
+	report := &TenantPermissionsReport{
+		TenantID:         tenantID,
+		UserPermissions:  make(map[string][]string),
+		GroupPermissions: make(map[string][]string),
+		VaultPermissions: make(map[string][]string),
+		ResourcesByType:  make(map[string][]string),
+	}
+
+	// 1. Buscar todos os vaults do tenant
+	vaults, err := ls.listVaultsInTenant(ctx, tenantID)
+	if err == nil && len(vaults) > 0 {
+		report.ResourcesByType["vaults"] = vaults
+		fmt.Printf("Found %d vaults for tenant %s: %v\n", len(vaults), tenantID, vaults)
+	}
+
+	// 2. Buscar todos os grupos do tenant
+	groups, err := ls.listGroupsInTenant(ctx, tenantID)
+	if err == nil && len(groups) > 0 {
+		report.ResourcesByType["groups"] = groups
+		fmt.Printf("Found %d groups for tenant %s: %v\n", len(groups), tenantID, groups)
+	}
+
+	// 3. Buscar todos os secrets do tenant
+	secrets, err := ls.listSecretsInTenant(ctx, tenantID)
+	if err == nil && len(secrets) > 0 {
+		report.ResourcesByType["secrets"] = secrets
+		fmt.Printf("Found %d secrets for tenant %s: %v\n", len(secrets), tenantID, secrets)
+	}
+
+	return report, nil
+}
+
+func (ls *LockariService) listGroupsInTenant(ctx context.Context, tenantID string) ([]string, error) {
+	// Buscar grupos onde o tenant é parent
+	req := &ListObjectsRequest{
+		User:     formatTenant(tenantID),
+		Relation: "parent",
+		Type:     "group",
+	}
+
+	resp, err := ls.ListObjects(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	groups := make([]string, len(resp.Objects))
+	for i, object := range resp.Objects {
+		groups[i] = extractIDFromObject(object)
+	}
+
+	return groups, nil
+}
+
+func (ls *LockariService) listVaultsInTenant(ctx context.Context, tenantID string) ([]string, error) {
+	// Buscar vaults onde o tenant é parent
+	req := &ListObjectsRequest{
+		User:     formatTenant(tenantID),
+		Relation: "parent",
+		Type:     "vault",
+	}
+
+	resp, err := ls.ListObjects(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	vaults := make([]string, len(resp.Objects))
+	for i, object := range resp.Objects {
+		vaults[i] = extractIDFromObject(object)
+	}
+
+	return vaults, nil
+}
+
+func (ls *LockariService) listSecretsInTenant(ctx context.Context, tenantID string) ([]string, error) {
+	// Implementação similar para secrets
+	req := &ListObjectsRequest{
+		User:     formatTenant(tenantID),
+		Relation: "parent",
+		Type:     "secret",
+	}
+
+	resp, err := ls.ListObjects(ctx, req)
+	if err != nil {
+		return []string{}, nil // Retorna vazio em caso de erro
+	}
+
+	secrets := make([]string, len(resp.Objects))
+	for i, object := range resp.Objects {
+		secrets[i] = extractIDFromObject(object)
+	}
+
+	return secrets, nil
+}
+
+type TenantPermissionsReport struct {
+	TenantID         string              `json:"tenant_id"`
+	VaultPermissions map[string][]string `json:"vault_permissions"`
+	GroupPermissions map[string][]string `json:"group_permissions"`
+	UserPermissions  map[string][]string `json:"user_permissions"`
+	ResourcesByType  map[string][]string `json:"resources_by_type"`
+}

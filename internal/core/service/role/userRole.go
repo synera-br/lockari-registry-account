@@ -223,6 +223,15 @@ func (s *userRoleService) GetByFilter(ctx context.Context, filter *dto.RoleFilte
 		return nil, corev1.ErrGenericError("user does not exist in tenant")
 	}
 
+	per, err := s.authorizer.ListAllTenantPermissions(ctx, userClaim.TenantID)
+	if err != nil {
+		fmt.Println("\n [Create] Error listing permissions from tenant:", err)
+
+	}
+	if per == nil {
+		fmt.Println("\n [Create] No permissions found for user:", userClaim.UID)
+	}
+	fmt.Println("\n [Create] Permissions for user:", per)
 	permissions, err := s.authorizer.ListPermissionFromTenant(ctx, userClaim.UID)
 	if err != nil {
 		fmt.Println("\n [Create] Error listing permissions from tenant:", err)
