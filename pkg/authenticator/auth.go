@@ -347,8 +347,11 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 		return err
 	}
 
+	fmt.Println("Setting custom claims for user:", uid)
+	fmt.Println("Claims:", claims)
+
 	if _, err := fa.GetTenant(ctx, uid); err != nil {
-		return errors.New("tenant_id cannot be empty")
+		return fmt.Errorf("error getting tenant for user %s: %w", uid, err)
 	}
 
 	if len(claims) < 1 {
