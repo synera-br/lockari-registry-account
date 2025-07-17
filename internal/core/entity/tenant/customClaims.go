@@ -1,5 +1,7 @@
 package entity
 
+import "fmt"
+
 type TenantCustomClaims struct {
 	TenantID          string              `json:"tenant_id,omitempty"`
 	Role              []string            `json:"role,omitempty"`
@@ -46,6 +48,16 @@ func NewTenantCustomClaims(tenantID *string, role []string, owner *Owner) *Tenan
 }
 
 func (c *TenantCustomClaims) ToMap() map[string]interface{} {
+	if c == nil {
+		fmt.Println("TenantCustomClaims is nil, returning empty map")
+		return map[string]interface{}{}
+	}
+
+	if c.TenantID == "" {
+		fmt.Println("TenantID is empty, returning empty map")
+		return map[string]interface{}{}
+	}
+
 	return map[string]interface{}{
 		"tenant_id":          c.TenantID,
 		"role":               c.Role,
