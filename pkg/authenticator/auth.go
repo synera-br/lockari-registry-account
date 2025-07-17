@@ -158,9 +158,6 @@ func (fa *firebaseAuthenticator) GetTenant(ctx context.Context, uid string) (str
 		return "", fmt.Errorf("user ID not found")
 	}
 
-	fmt.Println("\nGetting tenant for user:", uid)
-	fmt.Println("\nGetting claims for user:", claims)
-
 	tenantId, ok := claims.CustomClaims["tenant_id"]
 	if !ok {
 		if claims.TenantID != "" {
