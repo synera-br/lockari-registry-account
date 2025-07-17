@@ -40,9 +40,9 @@ func InitializeUserRoleService(repo entity.UserRoleRepository, tenant tenant.Ten
 		return nil, corev1.ErrRepositoryNotFound("TenantService")
 	}
 
-	if profile == nil {
-		return nil, corev1.ErrRepositoryNotFound("UserProfileService")
-	}
+	// if profile == nil {
+	// 	return nil, corev1.ErrRepositoryNotFound("UserProfileService")
+	// }
 
 	if auth == nil {
 		return nil, corev1.ErrRepositoryNotFound("Authenticator")
