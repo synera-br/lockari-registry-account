@@ -151,6 +151,8 @@ func (fa *firebaseAuthenticator) GetTenant(ctx context.Context, authToken string
 		return "", ErrEmptyUserID
 	}
 
+
+
 	if claims == nil || claims.CustomClaims == nil {
 		return "", errors.New("user or tenant ID not found")
 	}
