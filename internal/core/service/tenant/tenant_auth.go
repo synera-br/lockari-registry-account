@@ -33,14 +33,20 @@ func (s *tenantEventService) SetCustomClaims(ctx context.Context, owner *entity.
 	}
 
 	var customClaims map[string]interface{}
-	if getCustomClaims["custom_claims"] == nil {
-		tempClaims := make(map[string]interface{})
-		tempClaims["custom_claims"] = make(map[string]interface{})
-		for k, v := range getCustomClaims {
-			tempClaims[k] = v
-		}
-		customClaims = tempClaims
+
+	// Verificar se já existe a estrutura custom_claims
+	if getCustomClaims["custom_claims"] != nil {
+		// Já tem a estrutura correta, usar como está
+		customClaims = getCustomClaims
+		fmt.Println("Using existing custom_claims structure")
+	} else {
+		// Precisa criar a estrutura custom_claims e mover tudo para dentro
+		customClaims = make(map[string]interface{})
+		customClaims["custom_claims"] = getCustomClaims // TUDO vai para dentro de custom_claims
+		fmt.Println("Created new custom_claims structure")
 	}
+
+	fmt.Printf("Final customClaims structure: %+v\n", customClaims)
 
 	if err := s.authenticator.SetCustomClaims(ctx, owner.Uid, customClaims); err != nil {
 		return err
