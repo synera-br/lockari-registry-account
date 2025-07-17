@@ -34,7 +34,12 @@ func (s *tenantEventService) SetCustomClaims(ctx context.Context, owner *entity.
 
 	var customClaims map[string]interface{}
 	if getCustomClaims["custom_claims"] == nil {
-		customClaims["custom_claims"] = getCustomClaims
+		tempClaims := make(map[string]interface{})
+		tempClaims["custom_claims"] = make(map[string]interface{})
+		for k, v := range getCustomClaims {
+			tempClaims[k] = v
+		}
+		customClaims = tempClaims
 	}
 
 	if err := s.authenticator.SetCustomClaims(ctx, owner.Uid, customClaims); err != nil {
