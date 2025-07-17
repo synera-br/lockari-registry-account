@@ -338,6 +338,8 @@ func (fa *firebaseAuthenticator) SetTenantId(ctx context.Context, uid string, te
 		"tenant_id": tenantId,
 	}
 
+	claims["custom_claims"] = claims
+
 	err := fa.client.SetCustomUserClaims(ctx, uid, claims)
 	if err != nil {
 		return fmt.Errorf("error setting custom user claims: %w", err)
