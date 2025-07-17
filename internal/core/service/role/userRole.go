@@ -215,6 +215,11 @@ func (s *userRoleService) GetByFilter(ctx context.Context, filter *dto.RoleFilte
 	}
 
 	// Check if user exists in tenant
+	fmt.Println("\n [GetByFilter] Checking if user exists in tenant:", userClaim.UID, "in tenant:", userClaim.TenantID)
+	fmt.Println("\n [GetByFilter] Has permission", userClaim.TenantID != "", "for tenant:", userClaim.TenantID)
+	if userClaim.TenantID == "" {
+		fmt.Println("\n [GetByFilter] Getting Tenant ID from custom claims", userClaim.CustomClaims["tenant_id"])
+	}
 	if ok, err := s.UserExistsInTenant(ctx, &userClaim.UID, &userClaim.TenantID); err != nil {
 		return nil, fmt.Errorf("error checking user existence in tenant: %w", err)
 	} else if !ok {
