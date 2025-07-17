@@ -313,7 +313,6 @@ func (s *userRoleService) validateToken(ctx context.Context) (authenticator.User
 		return nil, fmt.Errorf(corev1.ContextError, err.Error())
 	}
 
-	fmt.Println("\n [validateToken] Getting token from context:", token)
 	userClaim, err := s.authenticator.GetClaimsFromToken(ctx, token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user claim from context: %s", err.Error())
@@ -323,11 +322,6 @@ func (s *userRoleService) validateToken(ctx context.Context) (authenticator.User
 		return nil, corev1.ErrGenericError("user claim is nil")
 	}
 
-	fmt.Println("\n [validateToken] Getting user claim for user:", userClaim)
-
-	fmt.Println("\n [validateToken] Getting custom claims:", userClaim.CustomClaims)
-
-	fmt.Println("\n [validateToken] Getting user claim for tenant:", userClaim.TenantID)
 	if userClaim.CustomClaims["tenant_id"] == "" {
 		return nil, corev1.ErrGenericError("user claim tenant ID is empty")
 	}

@@ -165,7 +165,6 @@ func (fa *firebaseAuthenticator) GetTenant(ctx context.Context, uid string) (str
 		return "", ErrClientNotInit
 	}
 
-	fmt.Println("Getting tenant for user:", uid)
 	claims, err := fa.client.GetUser(ctx, uid)
 	if err != nil {
 		return "", fmt.Errorf("error getting claims from token: %w", err)

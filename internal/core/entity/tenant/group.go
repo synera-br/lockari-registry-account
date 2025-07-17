@@ -5,10 +5,10 @@ import "strings"
 type TenantGroupType string
 
 const (
-	TenantGroupOwner   TenantGroupType = "OWNER"
-	TenantGroupManager TenantGroupType = "MANAGER"
-	TenantGroupWriter  TenantGroupType = "WRITER"
-	TenantGroupViewer  TenantGroupType = "VIEWER"
+	TenantGroupOwner   TenantGroupType = "owner"
+	TenantGroupManager TenantGroupType = "manager"
+	TenantGroupWriter  TenantGroupType = "writer"
+	TenantGroupViewer  TenantGroupType = "viewer"
 )
 
 type TenantGroup struct {
