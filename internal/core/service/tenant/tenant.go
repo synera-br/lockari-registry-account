@@ -245,6 +245,7 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 		return nil, corev1.ErrGenericError("Tenant not found")
 	}
 
+	// tenant_memberships
 	var responseTenant entity.Tenant
 	for _, tenant := range response {
 		if tenant.ID == tenantID {

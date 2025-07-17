@@ -103,6 +103,46 @@ func GetAuthorizationFromContext(ctx context.Context) (string, error) {
 	return auth, nil
 }
 
+func GetAuthorizationClaimFromContext(ctx context.Context, auth authenticator.Authenticator) (*auth.UserRecord, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf(ContextError, err.Error())
+	}
+
+	authFromCtx := ctx.Value("Authorization")
+	if authFromCtx == nil {
+		return nil, fmt.Errorf("authorization not found in context")
+	}
+
+	tokenStr, ok := authFromCtx.(string)
+	if !ok {
+		return nil, fmt.Errorf("authorization in context is not a string")
+	}
+
+	if tokenStr == "" {
+		return nil, fmt.Errorf("authorization in context is empty")
+	}
+
+	token := tokenStr
+	if strings.HasPrefix(tokenStr, "Bearer") {
+		hasToken := strings.Split(tokenStr, " ")
+		if len(hasToken) != 2 || hasToken[0] != "Bearer" {
+			return nil, fmt.Errorf("invalid authorization format, expected 'Bearer <token>', got: %s", tokenStr)
+		}
+		token = hasToken[1]
+	}
+
+	claim, err := auth.GetUserClaim(ctx, token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user claim from context: %s", err.Error())
+	}
+
+	if claim == nil {
+		return nil, fmt.Errorf("user claim is nil")
+	}
+
+	return claim, nil
+}
+
 func GetUserIDFromContext(ctx context.Context) (string, error) {
 	if err := ctx.Err(); err != nil {
 		return "", fmt.Errorf(ContextError, err.Error())

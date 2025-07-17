@@ -23,6 +23,7 @@ type Owner struct {
 	CreatedAt         time.Time           `json:"created_at,omitempty"`         // Optional: Timestamp when the user was created
 	GroupMemberships  []GroupMember       `json:"group_memberships,omitempty"`  // Optional: List of group IDs the user belongs to
 	TenantMemberships []TenantMemberships `json:"tenant_memberships,omitempty"` // Optional: List of tenant IDs the user belongs to
+	IsActive          bool                `json:"is_active,omitempty"`          // Optional: Indicates if the user is active
 }
 
 func (u *Owner) SetDefaultUser(tenant *string, group *GroupMember) error {
@@ -58,6 +59,8 @@ func (u *Owner) SetDefaultUser(tenant *string, group *GroupMember) error {
 	u.TenantMemberships = []TenantMemberships{
 		{TenantID: "default-tenant-id", Role: "member"},
 	}
+
+	u.IsActive = true
 
 	return nil
 }

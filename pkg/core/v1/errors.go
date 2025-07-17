@@ -161,3 +161,6 @@ func ErrRequestEntityTooLarge(message string) error {
 func ErrGenericError(message string) error {
 	return fmt.Errorf("%s", message)
 }
+func ErrPermissionDenied(message string) error {
+	return fmt.Errorf("permission denied: %s", message)
+}

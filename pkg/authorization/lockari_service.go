@@ -258,6 +258,25 @@ func (ls *LockariService) IsTenantMember(ctx context.Context, userID, tenantID s
 	return true, nil // Implementação simplificada
 }
 
+func (ls *LockariService) CanAssignRoleFromTenant(ctx context.Context, userID, tenantID *string, permission TenantRole) (bool, error) {
+	if !permission.IsValid() {
+		return false, fmt.Errorf("invalid tenant permission: %s", permission)
+	}
+
+	req := &CheckRequest{
+		User:     formatUser(*userID),
+		Relation: string(permission),
+		Object:   formatTenant(*tenantID),
+	}
+
+	response, err := ls.Check(ctx, req)
+	if err != nil {
+		return false, fmt.Errorf("error checking tenant permission: %w", err)
+	}
+
+	return response.Allowed, nil
+}
+
 // === GROUP OPERATIONS ===
 
 // CreateGroup cria um novo grupo

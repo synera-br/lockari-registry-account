@@ -7,8 +7,9 @@ import (
 )
 
 type GroupMember struct {
-	ID   string `json:"id"`   // ID do Grupo
-	Name string `json:"name"` // Nome do usuário no grupo
+	ID        string `json:"id"`         // ID do Grupo
+	GroupName string `json:"group_name"` // Nome do grupo
+	Name      string `json:"name"`       // Nome do usuário no grupo
 }
 
 // UserGroup representa um grupo de usuários armazenado no Firestore

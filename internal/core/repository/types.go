@@ -15,6 +15,7 @@ func SetCollection(ctx context.Context, collection string) (*string, error) {
 	if ctx == nil {
 		return nil, errors.New("context is nil")
 	}
+
 	fmt.Println("\nSetting collection:", collection)
 	fmt.Println("\nContext UserID:", ctx.Value("token"))
 	var col string
@@ -29,5 +30,16 @@ func SetCollection(ctx context.Context, collection string) (*string, error) {
 		col = fmt.Sprintf("tenant/%s/%s", userID, collection)
 	}
 
+	return &col, nil
+}
+
+func GetCollection(tenantid, collection *string) (*string, error) {
+	if tenantid == nil || collection == nil {
+		return nil, errors.New("tenantid or collection is nil")
+	}
+	if *tenantid == "" || *collection == "" {
+		return nil, errors.New("tenantid or collection is empty")
+	}
+	col := fmt.Sprintf("tenants/%s/%s", *tenantid, *collection)
 	return &col, nil
 }

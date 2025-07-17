@@ -53,8 +53,13 @@ func (r *tenantEventRepository) Create(ctx context.Context, tenant *entity.Tenan
 		return nil, errors.New("failed to save tenant event to database: " + err.Error())
 	}
 
-	fmt.Sprintf("Tenant event created: %s", response)
-	fmt.Sprintf("Tenant event response: %s", string(response))
+	if response == nil {
+		return nil, corev1.ErrGenericError("Failed to create tenant event")
+	}
+
+	if len(response) == 0 {
+		return nil, corev1.ErrGenericError("No tenant event created")
+	}
 
 	return r.convertToEntity(response)
 }
@@ -242,7 +247,7 @@ func (r *tenantEventRepository) CreateUser(ctx context.Context, user *entity.Own
 		return errors.New("failed to convert user to map: " + err.Error())
 	}
 
-	collection := fmt.Sprintf("tenants/%s/users", *tenantID)
+	collection := fmt.Sprintf("tenants/%s/profiles", *tenantID)
 	response, err := r.db.Create(ctx, toMap, collection)
 	if err != nil {
 		return errors.New("failed to save user event to database: " + err.Error())

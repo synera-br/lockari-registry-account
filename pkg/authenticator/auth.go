@@ -39,6 +39,8 @@ type FirebaseConfig struct {
 	AppID             string      `json:"appId" yaml:"appId"`
 }
 
+type UserCustomClaims *auth.UserRecord
+
 // Authenticator defines the interface for authentication operations.
 type Authenticator interface {
 	ValidateToken(ctx context.Context, authToken string) (map[string]interface{}, error)
@@ -47,6 +49,7 @@ type Authenticator interface {
 	DebugToken(ctx context.Context, authToken string) (map[string]interface{}, error)
 	GetTenant(ctx context.Context, authToken string) (string, error)
 	GetUserID(ctx context.Context, authToken string) (string, error)
+	GetUserClaim(ctx context.Context, authToken string) (UserCustomClaims, error)
 	GetUserEmail(ctx context.Context, authToken string) (string, error)
 	GetUserName(ctx context.Context, authToken string) (string, error)
 	SetTenantId(ctx context.Context, uid string, tenantId string) error
@@ -177,6 +180,23 @@ func (fa *firebaseAuthenticator) GetUserID(ctx context.Context, authToken string
 	}
 
 	return user.UID, nil
+}
+
+func (fa *firebaseAuthenticator) GetUserClaim(ctx context.Context, authToken string) (UserCustomClaims, error) {
+	if authToken == "" {
+		return nil, ErrEmptyToken
+	}
+	if fa.client == nil {
+		return nil, ErrClientNotInit
+	}
+
+	user, err := fa.client.GetUser(ctx, authToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting user: %w", err)
+	}
+
+	return user, nil
+
 }
 
 func (fa *firebaseAuthenticator) GetUserEmail(ctx context.Context, authToken string) (string, error) {

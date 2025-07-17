@@ -76,6 +76,9 @@ type LockariAuthorizationService interface {
 	// IsTenantMember verifica se o usuário é membro do tenant
 	IsTenantMember(ctx context.Context, userID, tenantID string) (bool, error)
 
+	// HasPermission verifica se o usuário tem permissão no tenant
+	CanAssignRoleFromTenant(ctx context.Context, userID, tenantID *string, permission TenantRole) (bool, error)
+
 	// === GROUP OPERATIONS ===
 
 	// CreateGroup cria um novo grupo

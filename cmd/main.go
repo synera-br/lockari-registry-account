@@ -26,6 +26,12 @@ import (
 	repo_tenant "github.com/synera-br/lockari-backend-app/internal/core/repository/tenant"
 	svc_tenant "github.com/synera-br/lockari-backend-app/internal/core/service/tenant"
 
+	// ROLE
+	entity_role "github.com/synera-br/lockari-backend-app/internal/core/entity/role"
+	repo_role "github.com/synera-br/lockari-backend-app/internal/core/repository/role"
+	svc_role "github.com/synera-br/lockari-backend-app/internal/core/service/role"
+	webhandler_role "github.com/synera-br/lockari-backend-app/internal/handler/web/role"
+
 	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
 	"github.com/synera-br/lockari-backend-app/pkg/authorization"
 	"github.com/synera-br/lockari-backend-app/pkg/cache"
@@ -89,6 +95,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	userRoles, err := initializeUserRoles(db, authClient, tokenJWT, authZ, auditSvc, tenant)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	webhandler_role.InitializeRoleHandler(userRoles, crypt, authClient, tokenJWT, apiResponse.RouterGroup, apiResponse.MiddlewareHeader)
 	webhandler.InitializeTenantHandler(tenant, crypt, authClient, tokenJWT, apiResponse.RouterGroup, apiResponse.MiddlewareHeader)
 	webhandler_audit.InitializeAuditSystemEventHandler(auditSvc, crypt, authClient, tokenJWT, apiResponse.RouterGroup, apiResponse.MiddlewareHeader)
 
@@ -321,6 +333,20 @@ func initializeTenant(db database.FirebaseDBInterface, auth authenticator.Authen
 	svc, err := svc_tenant.InitializeTenantEventService(repo, auth, tokenJWT, authZ, auditSvc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize tenant event service: %w", err)
+	}
+
+	return svc, nil
+}
+
+func initializeUserRoles(db database.FirebaseDBInterface, auth authenticator.Authenticator, tokenJWT tokengen.TokenGenerator, authZ authorization.LockariAuthorizationService, auditSvc entity_audit.AuditSystemEventService, tenant entity_tenant.TenantService) (entity_role.UserRoleService, error) {
+	repo, err := repo_role.InitializeUserRoleRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize user role repository: %w", err)
+	}
+
+	svc, err := svc_role.InitializeUserRoleService(repo, tenant, nil, auth, tokenJWT, authZ, auditSvc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize user role service: %w", err)
 	}
 
 	return svc, nil

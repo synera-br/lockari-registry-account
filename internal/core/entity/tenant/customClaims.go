@@ -9,12 +9,39 @@ type TenantCustomClaims struct {
 }
 
 func NewTenantCustomClaims(tenantID *string, role []string, owner *Owner) *TenantCustomClaims {
+	if tenantID == nil || *tenantID == "" {
+		return nil
+	}
+	if owner == nil {
+		return nil
+	}
+
+	tenant := &TenantMemberships{
+		TenantID: *tenantID,
+		Role:     "owner",
+	}
+
+	if owner.TenantMemberships != nil {
+		for _, m := range owner.TenantMemberships {
+			if m.TenantID == *tenantID {
+				tenant = &TenantMemberships{
+					TenantID: *tenantID,
+					Role:     m.Role,
+				}
+			}
+		}
+	}
+
+	tenants := make([]TenantMemberships, 0, len(owner.TenantMemberships))
+	tenants = append(tenants, owner.TenantMemberships...)
+	tenants = append(tenants, *tenant)
+
 	return &TenantCustomClaims{
 		TenantID:          *tenantID,
 		Role:              role,
 		PermissionLevel:   TenantGroupOwner,
 		GroupMemberships:  owner.GroupMemberships,
-		TenantMemberships: owner.TenantMemberships,
+		TenantMemberships: tenants,
 	}
 }
 
