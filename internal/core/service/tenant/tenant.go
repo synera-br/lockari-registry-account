@@ -57,7 +57,14 @@ func InitializeTenantEventService(repo entity.TenantRepository, auth authenticat
 	}, nil
 }
 
+// Create creates a new tenant and performs necessary operations such as creating a default group, user, and vault.
+// It also sets custom claims for the user in the authentication service.
 func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) (*entity.Tenant, error) {
+
+	// Check context
+	if ctx.Err() != nil {
+		return nil, fmt.Errorf(corev1.ContextCancelled, ctx.Err())
+	}
 
 	s.wg.Add(1)
 	defer s.wg.Wait()
@@ -82,22 +89,22 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 	if tenant == nil {
 		return nil, corev1.ErrGenericError("Tenant is required")
 	}
+
 	if err := tenant.IsValid(); err != nil {
 		if err.Error() != entity.ErrInvalidTenantInfoID {
 			return nil, corev1.ErrGenericError("Invalid tenant: " + err.Error())
 		}
 	}
 
-	// Check context
-	if ctx.Err() != nil {
-		return nil, fmt.Errorf(corev1.ContextCancelled, ctx.Err())
+	// Get token of application (JWT)
+	appToken := utils.GetTokenFromContext(ctx)
+
+	_, err := s.tokenJWT.Validate(appToken)
+	if err != nil {
+		return nil, fmt.Errorf(corev1.GenericError, err)
 	}
 
-	// check token firebase
-	token := utils.GetTokenFromContext(ctx)
-
-	// check tokenJWT
-	_, err := s.tokenJWT.Validate(token)
+	userToken, err := utils.GetAuthorizationFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf(corev1.GenericError, err)
 	}
@@ -107,6 +114,8 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 
 	// Generate tenant ID if not provided
 	tenantID := utils.GenerateTenant()
+
+	// Set tenant ID at tenant struct
 	tenant.SetTenantID(&tenantID)
 	if tenant.ID == "" {
 		return nil, corev1.ErrGenericError("Failed to generate tenant ID")
@@ -138,7 +147,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, fmt.Errorf("failed to create default group in database: %w", err)
 	}
 
-	// Set a user
+	// Set a default user
 	member := entity.GroupMember{
 		ID:   defaultGroup.ID,
 		Name: defaultGroup.Name,
@@ -159,7 +168,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, fmt.Errorf("failed to create default user in database: %w", err)
 	}
 
-	// Set a vault
+	// Define a default vault
 	defaultVault := entity.NewDefaultVault(&tenantID, &defaultUser.Uid)
 	err = s.createVaultInDB(ctx, defaultVault, &defaultUser.Uid, &tenantID)
 	if err != nil {

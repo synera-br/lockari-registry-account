@@ -6,6 +6,9 @@ import (
 	"github.com/synera-br/lockari-backend-app/pkg/utils"
 )
 
+// GroupMember representa um membro de um grupo de usuários
+// Este é o metadado do membro. A associação com users e tenants/vaults
+// é feita através de tuplas no OpenFGA e outras coleções no Firestore.
 type GroupMember struct {
 	ID        string `json:"id"`         // ID do Grupo
 	GroupName string `json:"group_name"` // Nome do grupo
