@@ -277,6 +277,28 @@ func (ls *LockariService) CanAssignRoleFromTenant(ctx context.Context, userID, t
 	return response.Allowed, nil
 }
 
+func (ls *LockariService) ListPermissionFromTenant(ctx context.Context, userID string) (interface{}, error) {
+
+	obj, err := ls.ListObjects(ctx, &ListObjectsRequest{
+		User: formatUser(userID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error listing objects for user %s: %w", userID, err)
+	}
+
+	if obj == nil || len(obj.Objects) == 0 {
+		return nil, fmt.Errorf("no objects found for user %s", userID)
+	}
+
+	for _, object := range obj.Objects {
+		fmt.Println("\n [LockariService] Object found:", object)
+	}
+
+	tenantID := extractIDFromObject(obj.Objects[0])
+
+	return tenantID, nil
+}
+
 // === GROUP OPERATIONS ===
 
 // CreateGroup cria um novo grupo
