@@ -104,11 +104,6 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, fmt.Errorf(corev1.GenericError, err)
 	}
 
-	_, err = utils.GetAuthorizationFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf(corev1.GenericError, err)
-	}
-
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
