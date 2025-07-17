@@ -291,7 +291,7 @@ func (s *userRoleService) validateToken(ctx context.Context) (authenticator.User
 		return nil, fmt.Errorf(corev1.ContextError, err.Error())
 	}
 
-	userClaim, err := s.authenticator.GetUserClaim(ctx, token)
+	userClaim, err := s.authenticator.GetClaimsFromToken(ctx, token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user claim from context: %s", err.Error())
 	}

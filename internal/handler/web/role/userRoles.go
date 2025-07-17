@@ -109,6 +109,7 @@ func (h *roleHandler) Get(c *gin.Context) {
 	}
 
 	ctx := context.WithValue(c.Request.Context(), "Authorization", authorizationToken)
+	h.authenticator.GetUserID(ctx, authorizationToken)
 
 	claim, err := h.authenticator.GetUserClaim(ctx, authorizationToken)
 	if err != nil {

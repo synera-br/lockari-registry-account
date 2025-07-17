@@ -222,7 +222,7 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 		return nil, fmt.Errorf(utils.ContextError, err.Error())
 	}
 
-	claims, err := s.authenticator.ValidateToken(ctx, token)
+	claims, err := s.authenticator.GetClaimsFromToken(ctx, token)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +231,7 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 		return nil, errors.New("claims cannot be nil")
 	}
 
-	tenantID, ok := claims["tenant_id"].(string)
+	tenantID, ok := claims.CustomClaims["tenant_id"].(string)
 	if !ok {
 		return nil, fmt.Errorf("tenant_id not found in claims")
 	}

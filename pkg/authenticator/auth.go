@@ -44,12 +44,13 @@ type UserCustomClaims *auth.UserRecord
 // Authenticator defines the interface for authentication operations.
 type Authenticator interface {
 	ValidateToken(ctx context.Context, authToken string) (map[string]interface{}, error)
+	GetClaimsFromToken(ctx context.Context, authToken string) (UserCustomClaims, error)
 	IsExpired(ctx context.Context, authToken string) (bool, error)
 	IsValid(ctx context.Context, authToken string) (bool, error)
 	DebugToken(ctx context.Context, authToken string) (map[string]interface{}, error)
 	GetTenant(ctx context.Context, authToken string) (string, error)
 	GetUserID(ctx context.Context, authToken string) (string, error)
-	GetUserClaim(ctx context.Context, authToken string) (UserCustomClaims, error)
+	GetUserClaim(ctx context.Context, uid string) (UserCustomClaims, error)
 	GetUserEmail(ctx context.Context, authToken string) (string, error)
 	GetUserName(ctx context.Context, authToken string) (string, error)
 	SetTenantId(ctx context.Context, uid string, tenantId string) error
@@ -182,7 +183,8 @@ func (fa *firebaseAuthenticator) GetUserID(ctx context.Context, authToken string
 	return user.UID, nil
 }
 
-func (fa *firebaseAuthenticator) GetUserClaim(ctx context.Context, authToken string) (UserCustomClaims, error) {
+// GetClaimsFromToken extracts and returns all claims from Firebase ID token
+func (fa *firebaseAuthenticator) GetClaimsFromToken(ctx context.Context, authToken string) (UserCustomClaims, error) {
 	if authToken == "" {
 		return nil, ErrEmptyToken
 	}
@@ -190,7 +192,55 @@ func (fa *firebaseAuthenticator) GetUserClaim(ctx context.Context, authToken str
 		return nil, ErrClientNotInit
 	}
 
-	user, err := fa.client.GetUser(ctx, authToken)
+	var token string
+	if strings.HasPrefix(authToken, "Bearer") {
+		result := strings.Split(authToken, " ")
+		if len(result) != 2 || result[0] != "Bearer" {
+			return nil, fmt.Errorf("invalid auth token format, expected 'Bearer <token>', got: %s", authToken)
+		}
+		token = result[1]
+	} else {
+		token = authToken
+	}
+
+	// Verify the ID token and extract claims
+	verifiedToken, err := fa.client.VerifyIDToken(ctx, token)
+	if err != nil {
+		return nil, fmt.Errorf("error verifying ID token: %w", err)
+	}
+
+	// Check if claims exist
+	if verifiedToken.Claims == nil {
+		return nil, ErrNoClaimsFound
+	}
+
+	var records UserCustomClaims
+	for k, v := range verifiedToken.Claims {
+		if k == "user_id" || k == "sub" {
+			if uid, ok := v.(string); ok && uid != "" {
+				records, err = fa.client.GetUser(ctx, uid)
+				if err != nil {
+					return nil, fmt.Errorf("error getting user record: %w", err)
+				}
+				break
+			}
+		}
+	}
+
+	return records, nil
+}
+
+// GetUserClaim retrieves the user claims from the context using the Firebase client.
+// uid is the Firebase user ID, not the auth token.
+func (fa *firebaseAuthenticator) GetUserClaim(ctx context.Context, uid string) (UserCustomClaims, error) {
+	if uid == "" {
+		return nil, ErrEmptyToken
+	}
+	if fa.client == nil {
+		return nil, ErrClientNotInit
+	}
+
+	user, err := fa.client.GetUser(ctx, uid)
 	if err != nil {
 		return nil, fmt.Errorf("error getting user: %w", err)
 	}
