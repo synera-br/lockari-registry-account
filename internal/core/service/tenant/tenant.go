@@ -104,7 +104,7 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 		return nil, fmt.Errorf(corev1.GenericError, err)
 	}
 
-	userToken, err := utils.GetAuthorizationFromContext(ctx)
+	_, err = utils.GetAuthorizationFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf(corev1.GenericError, err)
 	}
