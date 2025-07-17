@@ -220,7 +220,9 @@ func (s *userRoleService) GetByFilter(ctx context.Context, filter *dto.RoleFilte
 	if userClaim.TenantID == "" {
 		fmt.Println("\n [GetByFilter] Getting Tenant ID from custom claims", userClaim.CustomClaims["tenant_id"])
 	}
-	if ok, err := s.UserExistsInTenant(ctx, &userClaim.UID, &userClaim.TenantID); err != nil {
+
+	trenantID := userClaim.CustomClaims["tenant_id"].(string)
+	if ok, err := s.UserExistsInTenant(ctx, &userClaim.UID, &trenantID); err != nil {
 		return nil, fmt.Errorf("error checking user existence in tenant: %w", err)
 	} else if !ok {
 		return nil, corev1.ErrGenericError("user does not exist in tenant")
