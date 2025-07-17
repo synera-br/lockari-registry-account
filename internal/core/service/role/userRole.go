@@ -273,6 +273,9 @@ func (s *userRoleService) UserExistsInTenant(ctx context.Context, userID, tenant
 	// 	return false, corev1.ErrGenericError("user profile is not active")
 	// }
 
+	fmt.Println("\n [UserExistsInTenant] Checking if user exists in tenant:", *userID, "in tenant:", *tenantID)
+	fmt.Println("\n [UserExistsInTenant] Has permission", tenantID != nil, "for tenant:", *tenantID)
+
 	return tenantID != nil, nil
 }
 
