@@ -293,6 +293,11 @@ func (ls *LockariService) ListPermissionFromTenant(ctx context.Context, tenantID
 			fmt.Println("\n [ListPermissionFromTenant] Error listing objects:", err)
 		}
 
+		if response == nil {
+			fmt.Println("\n [ListPermissionFromTenant] Response is nil")
+			continue
+		}
+
 		if len(response.Objects) > 0 {
 			fmt.Println("\n [ListPermissionFromTenant] Found objects for relation:", relation, "in tenant:", tenantID)
 		}

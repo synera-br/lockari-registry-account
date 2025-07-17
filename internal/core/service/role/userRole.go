@@ -232,6 +232,7 @@ func (s *userRoleService) GetByFilter(ctx context.Context, filter *dto.RoleFilte
 		fmt.Println("\n [Create] No permissions found for user:", userClaim.UID)
 	}
 	fmt.Println("\n [Create] Permissions for user:", per)
+	fmt.Println("\n Starting ListPermissionFromTenant for user:", trenantID)
 	permissions, err := s.authorizer.ListPermissionFromTenant(ctx, trenantID)
 	if err != nil {
 		fmt.Println("\n [Create] Error listing permissions from tenant:", err)
