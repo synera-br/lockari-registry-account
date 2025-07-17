@@ -107,7 +107,7 @@ const (
 // AllTenantRoles retorna todos os papéis válidos
 func AllTenantRoles() []TenantRole {
 	return []TenantRole{
-		TenantRoleOwner, TenantRoleAdmin, TenantRoleMember, TenantRoleGuest,
+		TenantRoleOwner, TenantRoleAdmin, TenantRoleMember, TenantRoleGuest, TenantRoleManager,
 	}
 }
 
