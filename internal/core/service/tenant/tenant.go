@@ -239,7 +239,8 @@ func (s *tenantEventService) Get(ctx context.Context, filters entity.TenantFilte
 
 	fmt.Println("\nGetting claims:", claims)
 	fmt.Println("\nGetting Custom claims:", claims.CustomClaims)
-	fmt.Println("\nGetting Custom claims2:", claims.CustomClaims["custom_claims"])
+	
+	// Corrigindo uso incorreto: claims.CustomClaims já é um map[string]interface{}
 	tenantID, ok := claims.CustomClaims["tenant_id"].(string)
 	if !ok {
 		return nil, fmt.Errorf("tenant_id not found in claims")

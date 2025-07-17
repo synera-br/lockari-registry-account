@@ -338,8 +338,6 @@ func (fa *firebaseAuthenticator) SetTenantId(ctx context.Context, uid string, te
 		"tenant_id": tenantId,
 	}
 
-	claims["custom_claims"] = claims
-
 	err := fa.client.SetCustomUserClaims(ctx, uid, claims)
 	if err != nil {
 		return fmt.Errorf("error setting custom user claims: %w", err)
@@ -385,20 +383,12 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 	}
 
 	if len(claims) < 1 {
-		return errors.New("roles cannot be empty")
+		return errors.New("claims cannot be empty")
 	}
 
-	if claims["custom_claims"] == nil {
-		return errors.New("custom claims are required")
-	}
-
-	custom, ok := claims["custom_claims"].(map[string]interface{})
-	if !ok {
-		return errors.New("custom claims must be a map")
-	}
-
-	if custom["tenant_id"] == nil {
-		return errors.New("tenant claim is required")
+	// Validar que tenant_id existe diretamente nos claims
+	if claims["tenant_id"] == nil {
+		return errors.New("tenant_id claim is required")
 	}
 
 	fmt.Println("Validate claims for user:", uid)
@@ -408,11 +398,11 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 
 	err := fa.client.SetCustomUserClaims(ctx, uid, claims)
 	if err != nil {
-		log.Printf("Error setting custom user claims: %v", err)
+		fmt.Printf("Error setting custom user claims: %v", err)
 		return fmt.Errorf("error setting custom user claims: %w", err)
 	}
 
-	log.Printf("Successfully set custom claims for user %s. Role: %s", uid, claims)
+	log.Printf("Successfully set custom claims for user %s. Claims: %v", uid, claims)
 
 	return nil
 }
