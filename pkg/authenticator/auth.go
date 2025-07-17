@@ -134,15 +134,18 @@ func InitializeAuth(ctx context.Context, config *FirebaseConfig) (Authenticator,
 	return &firebaseAuthenticator{client: client}, nil
 }
 
-func (fa *firebaseAuthenticator) GetTenant(ctx context.Context, authToken string) (string, error) {
-	if authToken == "" {
-		return "", ErrEmptyToken
+// GetTenant retrieves the tenant ID from the user's custom claims.
+// uid is the Firebase user ID, not the auth token.
+func (fa *firebaseAuthenticator) GetTenant(ctx context.Context, uid string) (string, error) {
+	if uid == "" {
+		return "", ErrEmptyUserID
 	}
 	if fa.client == nil {
 		return "", ErrClientNotInit
 	}
 
-	claims, err := fa.GetClaimsFromToken(ctx, authToken)
+	fmt.Println("Getting tenant for user:", uid)
+	claims, err := fa.client.GetUser(ctx, uid)
 	if err != nil {
 		return "", fmt.Errorf("error getting claims from token: %w", err)
 	}
@@ -150,8 +153,6 @@ func (fa *firebaseAuthenticator) GetTenant(ctx context.Context, authToken string
 	if claims == nil || claims.UID == "" {
 		return "", ErrEmptyUserID
 	}
-
-
 
 	if claims == nil || claims.CustomClaims == nil {
 		return "", errors.New("user or tenant ID not found")
@@ -350,7 +351,7 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 	}
 
 	if _, err := fa.GetUserID(ctx, uid); err != nil {
-		return err
+		return fmt.Errorf("error getting user ID: %w", err)
 	}
 
 	fmt.Println("Setting custom claims for user:", uid)
