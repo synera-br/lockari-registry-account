@@ -65,9 +65,7 @@ func (c *TenantCustomClaims) ToMap() map[string]interface{} {
 	}
 
 	fmt.Println("Converting TenantCustomClaims to map:", c.CustomClaims)
-	custom := map[string]interface{}{}
-	custom["custom_claims"] = map[string]interface{}{
-
+	custom := map[string]interface{}{
 		"tenant_id":          c.CustomClaims.TenantID,
 		"role":               c.CustomClaims.Role,
 		"permission_level":   c.CustomClaims.PermissionLevel,
