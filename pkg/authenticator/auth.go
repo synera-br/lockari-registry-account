@@ -41,6 +41,20 @@ type FirebaseConfig struct {
 
 type UserCustomClaims *auth.UserRecord
 
+func ToMap(u UserCustomClaims) map[string]interface{} {
+	if u == nil {
+		return nil
+	}
+
+	return map[string]interface{}{
+		"uid":           u.UID,
+		"email":         u.Email,
+		"name":          u.DisplayName,
+		"tenant_id":     u.TenantID,
+		"custom_claims": u.CustomClaims,
+	}
+}
+
 // Authenticator defines the interface for authentication operations.
 type Authenticator interface {
 	ValidateToken(ctx context.Context, authToken string) (map[string]interface{}, error)
