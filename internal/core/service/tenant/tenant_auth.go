@@ -24,8 +24,8 @@ func (s *tenantEventService) SetCustomClaims(ctx context.Context, owner *entity.
 		return corev1.ErrGenericError("tenantID cannot be empty")
 	}
 
-	fmt.Println("Setting custom claims for user:", claims)
-	fmt.Println("Settings of owner:", owner)
+	fmt.Println("\nSetting custom claims for user:", claims.ToMap())
+	fmt.Println("\nSettings of owner:", owner)
 	if err := s.authenticator.SetCustomClaims(ctx, owner.Uid, claims.ToMap()); err != nil {
 		return err
 	}

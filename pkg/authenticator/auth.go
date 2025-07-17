@@ -354,8 +354,8 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 		return fmt.Errorf("error getting user ID: %w", err)
 	}
 
-	fmt.Println("Setting custom claims for user:", uid)
-	fmt.Println("Claims:", claims)
+	fmt.Println("\nSetting custom claims for user:", uid)
+	fmt.Println("\nClaims:", claims)
 
 	if _, err := fa.GetTenant(ctx, uid); err != nil {
 		return fmt.Errorf("error getting tenant for user %s: %w", uid, err)
