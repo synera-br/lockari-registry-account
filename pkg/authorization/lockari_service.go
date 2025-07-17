@@ -285,6 +285,7 @@ func (ls *LockariService) ListPermissionFromTenant(ctx context.Context, tenantID
 		req := &ListObjectsRequest{
 			User:     formatTenant(tenantID),
 			Relation: relation,
+			Type:     "tenant",
 		}
 
 		response, err := ls.ListObjects(ctx, req)
