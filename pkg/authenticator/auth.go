@@ -360,15 +360,16 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 		return fmt.Errorf("error getting user ID: %w", err)
 	}
 
-	fmt.Println("\nSetting custom claims for user:", uid)
-	fmt.Println("\nClaims:", claims)
-
-	if _, err := fa.GetTenant(ctx, uid); err != nil {
-		return fmt.Errorf("error getting tenant for user %s: %w", uid, err)
+	if uid == "" {
+		return ErrEmptyUserID
 	}
 
 	if len(claims) < 1 {
 		return errors.New("roles cannot be empty")
+	}
+
+	if claims["tenant_id"] == nil {
+		return errors.New("tenant claim is required")
 	}
 
 	err := fa.client.SetCustomUserClaims(ctx, uid, claims)
