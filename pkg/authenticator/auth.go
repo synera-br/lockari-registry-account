@@ -151,7 +151,7 @@ func (fa *firebaseAuthenticator) GetTenant(ctx context.Context, authToken string
 		return "", errors.New("user or tenant ID not found")
 	}
 
-	tenantId, ok := user.CustomClaims["tenantId"]
+	tenantId, ok := user.CustomClaims["tenant_id"]
 	if !ok {
 		return "", errors.New("tenant ID not found in user claims")
 	}
@@ -348,7 +348,7 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 	}
 
 	if _, err := fa.GetTenant(ctx, uid); err != nil {
-		return errors.New("tenantId cannot be empty")
+		return errors.New("tenant_id cannot be empty")
 	}
 
 	if len(claims) < 1 {
