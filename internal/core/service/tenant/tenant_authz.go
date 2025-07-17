@@ -8,6 +8,41 @@ import (
 	"github.com/synera-br/lockari-backend-app/pkg/authorization"
 )
 
+func (s *tenantEventService) initializeAuthorizer(ctx context.Context, tenant *entity.Tenant, defaultUser entity.Owner, defaultGroup *entity.UserGroup, defaultVault *entity.Vault) error {
+	err := s.createTenantInAuthorization(ctx, tenant)
+	if err != nil {
+		// Rollback tenant creation in database if authorization fails
+		originalErr := err
+		if rollbackErr := s.authenticator.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.ID); rollbackErr != nil {
+			return fmt.Errorf("failed to rollback tenant creation in database: %w", rollbackErr)
+		}
+		return fmt.Errorf("failed to create tenant in authorization service: %w", originalErr)
+	}
+
+	relation := fmt.Sprintf("%s", entity.TenantGroupOwner)
+	err = s.AssociateGroupToTenant(ctx, &defaultGroup.ID, &tenant.ID, &defaultUser.Uid, &relation)
+	if err != nil {
+		return fmt.Errorf("failed to associate group to tenant: %w", err)
+	}
+
+	err = s.AssociateUserToVault(ctx, &defaultVault.ID, &tenant.ID, &defaultUser.Uid)
+	if err != nil {
+		return fmt.Errorf("failed to associate user to vault: %w", err)
+	}
+
+	features := make([]authorization.PlanFeature, 0)
+	realations := []string{"owner", fmt.Sprintf("%s", entity.TenantGroupOwner)}
+
+	err = s.authorizer.SetupTenant(ctx, tenant.ID, tenant.Owner.GetEmail(), features, realations)
+	if err != nil {
+		if err := s.authenticator.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.ID); err != nil {
+			return fmt.Errorf("failed to set tenant rollback: %w", err)
+		}
+		return authorization.NewAuthorizationError("SetupTenant", "Failed to setup tenant in authorization service", err)
+	}
+	return nil
+}
+
 func (s *tenantEventService) createTenantInAuthorization(ctx context.Context, tenant *entity.Tenant) error {
 
 	features := make([]authorization.PlanFeature, 0)

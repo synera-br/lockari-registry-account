@@ -171,36 +171,9 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 
 	// ##### AUTHORIZATION #####
 	// create tenant in authorization service
-	err = s.createTenantInAuthorization(ctx, result)
+	err = s.initializeAuthorizer(ctx, result, defaultUser, defaultGroup, defaultVault)
 	if err != nil {
-		// Rollback tenant creation in database if authorization fails
-		originalErr := err
-		if rollbackErr := s.authenticator.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.ID); rollbackErr != nil {
-			return nil, fmt.Errorf("failed to rollback tenant creation in database: %w", rollbackErr)
-		}
-		return nil, fmt.Errorf("failed to create tenant in authorization service: %w", originalErr)
-	}
-
-	relation := fmt.Sprintf("%s", entity.TenantGroupOwner)
-	err = s.AssociateGroupToTenant(ctx, &defaultGroup.ID, &tenantID, &defaultUser.Uid, &relation)
-	if err != nil {
-		return nil, fmt.Errorf("failed to associate group to tenant: %w", err)
-	}
-
-	err = s.AssociateUserToVault(ctx, &defaultVault.ID, &tenantID, &defaultUser.Uid)
-	if err != nil {
-		return nil, fmt.Errorf("failed to associate user to vault: %w", err)
-	}
-
-	features := make([]authorization.PlanFeature, 0)
-	realations := []string{"owner", fmt.Sprintf("%s", entity.TenantGroupOwner)}
-
-	err = s.authorizer.SetupTenant(ctx, tenantID, tenant.Owner.GetEmail(), features, realations)
-	if err != nil {
-		if err := s.authenticator.SetTenantRollback(ctx, tenant.Owner.GetEmail(), tenant.ID); err != nil {
-			return nil, fmt.Errorf("failed to set tenant rollback: %w", err)
-		}
-		return nil, authorization.NewAuthorizationError("SetupTenant", "Failed to setup tenant in authorization service", err)
+		return nil, fmt.Errorf("failed to initialize authorizer: %w", err)
 	}
 
 	// ##### ATUALIZAR CUSTOM CLAIMS DO FIREBASE AUTH #####
