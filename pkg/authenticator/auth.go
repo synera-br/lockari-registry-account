@@ -254,7 +254,7 @@ func (fa *firebaseAuthenticator) SetTenantId(ctx context.Context, uid string, te
 
 	// Set custom user claims with tenantId
 	claims := map[string]interface{}{
-		"tenantId": tenantId,
+		"tenant_id": tenantId,
 	}
 
 	err := fa.client.SetCustomUserClaims(ctx, uid, claims)
