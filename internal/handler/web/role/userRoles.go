@@ -111,7 +111,7 @@ func (h *roleHandler) Get(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", authorizationToken)
 	h.authenticator.GetUserID(ctx, authorizationToken)
 
-	claim, err := h.authenticator.GetUserClaim(ctx, authorizationToken)
+	claim, err := h.authenticator.GetClaimsFromToken(ctx, authorizationToken)
 	if err != nil {
 		log.Println("Error getting user claim from context:", err)
 		c.JSON(500, gin.H{"error": fmt.Sprintf("Failed to get user claim: %s", err.Error())})
