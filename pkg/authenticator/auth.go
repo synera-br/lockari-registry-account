@@ -46,13 +46,20 @@ func ToMap(u UserCustomClaims) map[string]interface{} {
 		return nil
 	}
 
-	return map[string]interface{}{
-		"uid":           u.UID,
-		"email":         u.Email,
-		"name":          u.DisplayName,
-		"tenant_id":     u.TenantID,
-		"custom_claims": u.CustomClaims,
+	claims := map[string]interface{}{
+		"uid":       u.UID,
+		"email":     u.Email,
+		"name":      u.DisplayName,
+		"tenant_id": u.TenantID,
 	}
+
+	if u.CustomClaims != nil {
+		for k, v := range u.CustomClaims {
+			claims[k] = v
+		}
+	}
+
+	return claims
 }
 
 // Authenticator defines the interface for authentication operations.
