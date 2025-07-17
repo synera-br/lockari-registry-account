@@ -93,7 +93,7 @@ func (s *userRoleService) Create(ctx context.Context, userRole *entity.UserRole)
 	}
 
 	// Check permission on authorization service
-	if ok, err := s.authorizer.CanAssignRoleFromTenant(ctx, &userClaim.UID, &userClaim.TenantID, authorization.TenantRoleManager); err != nil {
+	if ok, err := s.authorizer.CanAssignRoleFromTenant(ctx, &userClaim.UID, &userClaim.TenantID, authorization.TenantRoleOwner); err != nil {
 		return nil, fmt.Errorf("error checking tenant permission: %w", err)
 	} else if !ok {
 		return nil, corev1.ErrPermissionDenied("user does not have permission to create user role")
