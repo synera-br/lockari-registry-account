@@ -223,7 +223,7 @@ func (s *userRoleService) GetByFilter(ctx context.Context, filter *dto.RoleFilte
 		return nil, corev1.ErrGenericError("user does not exist in tenant")
 	}
 
-	per, err := s.authorizer.ListAllTenantPermissions(ctx, userClaim.TenantID)
+	per, err := s.authorizer.ListAllTenantPermissions(ctx, trenantID)
 	if err != nil {
 		fmt.Println("\n [Create] Error listing permissions from tenant:", err)
 
@@ -232,7 +232,7 @@ func (s *userRoleService) GetByFilter(ctx context.Context, filter *dto.RoleFilte
 		fmt.Println("\n [Create] No permissions found for user:", userClaim.UID)
 	}
 	fmt.Println("\n [Create] Permissions for user:", per)
-	permissions, err := s.authorizer.ListPermissionFromTenant(ctx, userClaim.UID)
+	permissions, err := s.authorizer.ListPermissionFromTenant(ctx, trenantID)
 	if err != nil {
 		fmt.Println("\n [Create] Error listing permissions from tenant:", err)
 		return nil, fmt.Errorf("error listing permissions from tenant: %w", err)
@@ -244,7 +244,7 @@ func (s *userRoleService) GetByFilter(ctx context.Context, filter *dto.RoleFilte
 	fmt.Println("\n [Create] Permissions for user:", permissions)
 
 	// Check permission on authorization service
-	if ok, err := s.authorizer.CanAssignRoleFromTenant(ctx, &userClaim.UID, &userClaim.TenantID, authorization.TenantRoleManager); err != nil {
+	if ok, err := s.authorizer.CanAssignRoleFromTenant(ctx, &userClaim.UID, &trenantID, authorization.TenantRoleManager); err != nil {
 		return nil, fmt.Errorf("error checking tenant permission: %w", err)
 	} else if !ok {
 		return nil, corev1.ErrPermissionDenied("user does not have permission to create user role")
