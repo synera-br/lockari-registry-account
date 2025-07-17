@@ -9,7 +9,19 @@ import (
 )
 
 func (s *tenantEventService) initializeAuthorizer(ctx context.Context, tenant *entity.Tenant, defaultUser entity.Owner, defaultGroup *entity.UserGroup, defaultVault *entity.Vault) error {
-	err := s.createTenantInAuthorization(ctx, tenant)
+
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	health, err := s.authorizer.Health(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check authorization service health: %w", err)
+	}
+
+	fmt.Println("\n Authorization Service Health: ", health)
+
+	err = s.createTenantInAuthorization(ctx, tenant)
 	if err != nil {
 		// Rollback tenant creation in database if authorization fails
 		originalErr := err
