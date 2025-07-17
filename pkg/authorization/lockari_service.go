@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // LockariService implementa a interface LockariAuthorizationService
@@ -85,11 +86,33 @@ func (ls *LockariService) Delete(ctx context.Context, req *DeleteRequest) error 
 }
 
 // Health verifica se o OpenFGA está disponível (delegado para o serviço básico)
-func (ls *LockariService) Health(ctx context.Context) error {
-	// if ls.service != nil {
-	// 	return ls.service.Health(ctx)
-	// }
-	return nil
+func (ls *LockariService) Health(ctx context.Context) (*HealthCheckResponse, error) {
+	start := time.Now()
+
+	response := &HealthCheckResponse{
+		Status:    HealthStateHealthy,
+		Timestamp: start,
+	}
+
+	// Verificar se o serviço foi inicializado
+	if ls.service == nil {
+		response.Status = HealthStateUnhealthy
+		response.Message = "authorization service not initialized"
+		response.Duration = time.Since(start)
+		return response, fmt.Errorf("authorization service not initialized")
+	}
+
+	// Verificar conectividade com OpenFGA
+	if err := ls.service.HealthCheck(ctx); err != nil {
+		response.Status = HealthStateUnhealthy
+		response.Message = fmt.Sprintf("OpenFGA health check failed: %v", err)
+		response.Duration = time.Since(start)
+		return response, fmt.Errorf("OpenFGA health check failed: %w", err)
+	}
+
+	response.Message = "authorization service is healthy"
+	response.Duration = time.Since(start)
+	return response, nil
 }
 
 // ===== IMPLEMENTING LockariAuthorizationService SPECIFIC METHODS =====

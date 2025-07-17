@@ -223,6 +223,12 @@ func (s *userRoleService) GetByFilter(ctx context.Context, filter *dto.RoleFilte
 		return nil, corev1.ErrGenericError("user does not exist in tenant")
 	}
 
+	health, err := s.authorizer.Health(ctx)
+	if err != nil {
+		fmt.Println("\n Helath error...", err)
+	}
+	fmt.Println("\n Health is...", health)
+
 	per, err := s.authorizer.ListAllTenantPermissions(ctx, trenantID)
 	if err != nil {
 		fmt.Println("\n [Create] Error listing permissions from tenant:", err)

@@ -24,7 +24,7 @@ type AuthorizationService interface {
 	Delete(ctx context.Context, req *DeleteRequest) error
 
 	// Health verifica se o OpenFGA está disponível
-	Health(ctx context.Context) error
+	Health(ctx context.Context) (*HealthCheckResponse, error)
 }
 
 // LockariAuthorizationService é a interface específica do domínio Lockari
