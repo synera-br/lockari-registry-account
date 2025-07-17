@@ -27,16 +27,17 @@ func (s *tenantEventService) SetCustomClaims(ctx context.Context, owner *entity.
 	fmt.Println("\nSetting custom claims for user:", claims.ToMap())
 	fmt.Println("\nSettings of owner:", owner)
 
-	cc := claims.ToMap()
-	if cc == nil {
+	getCustomClaims := claims.ToMap()
+	if getCustomClaims == nil {
 		return corev1.ErrGenericError("failed to convert claims to map")
 	}
 
-	if cc["custom_claims"] == nil {
-		return corev1.ErrGenericError("custom_claims cannot be nil")
+	var customClaims map[string]interface{}
+	if getCustomClaims["custom_claims"] == nil {
+		customClaims["custom_claims"] = getCustomClaims
 	}
 
-	if err := s.authenticator.SetCustomClaims(ctx, owner.Uid, cc); err != nil {
+	if err := s.authenticator.SetCustomClaims(ctx, owner.Uid, customClaims); err != nil {
 		return err
 	}
 
