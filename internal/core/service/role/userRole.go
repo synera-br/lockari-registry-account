@@ -300,6 +300,7 @@ func (s *userRoleService) validateToken(ctx context.Context) (authenticator.User
 		return nil, corev1.ErrGenericError("user claim is nil")
 	}
 
+	fmt.Println("\n [validateToken] Getting user claim for user:", userClaim)
 	if userClaim.TenantID == "" {
 		return nil, corev1.ErrGenericError("user claim tenant ID is empty")
 	}
