@@ -394,28 +394,28 @@ func (fa *firebaseAuthenticator) SetCustomClaims(ctx context.Context, uid string
 	fmt.Println("\nGetting claims for user:", claims)
 	fmt.Println("\nGetting custom claims for user:", claims["custom_claims"])
 
-	if claims["custom_claims"] == nil {
-		fmt.Println("\nValidate claims for user:", uid)
-		return errors.New("custom claims are required")
-	}
+	// if claims["custom_claims"] == nil {
+	// 	fmt.Println("\nValidate claims for user:", uid)
+	// 	return errors.New("custom claims are required")
+	// }
 
-	custom, ok := claims["custom_claims"].(map[string]interface{})
-	if !ok {
-		fmt.Println("\nValidate claims for user:", uid)
-		fmt.Println("Custom claims must be a map:", claims["custom_claims"])
-		return errors.New("custom claims must be a map")
-	}
+	// custom, ok := claims["custom_claims"].(map[string]interface{})
+	// if !ok {
+	// 	fmt.Println("\nValidate claims for user:", uid)
+	// 	fmt.Println("Custom claims must be a map:", claims["custom_claims"])
+	// 	return errors.New("custom claims must be a map")
+	// }
 
-	if custom["tenant_id"] == nil {
-		fmt.Println("\nValidate claims for user:", uid)
-		fmt.Println("Tenant claim is required:", custom["tenant_id"])
-		return errors.New("tenant claim is required")
-	}
+	// if custom["tenant_id"] == nil {
+	// 	fmt.Println("\nValidate claims for user:", uid)
+	// 	fmt.Println("Tenant claim is required:", custom["tenant_id"])
+	// 	return errors.New("tenant claim is required")
+	// }
 
-	fmt.Println("Validate claims for user:", uid)
-	for k, v := range claims {
-		fmt.Printf("Setting claim %s: %v\n", k, v)
-	}
+	// fmt.Println("Validate claims for user:", uid)
+	// for k, v := range claims {
+	// 	fmt.Printf("Setting claim %s: %v\n", k, v)
+	// }
 
 	err := fa.client.SetCustomUserClaims(ctx, uid, claims)
 	if err != nil {
