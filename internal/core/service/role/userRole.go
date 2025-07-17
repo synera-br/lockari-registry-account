@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sync"
 
-	profile_dto "github.com/synera-br/lockari-backend-app/internal/core/dto/profile"
 	dto "github.com/synera-br/lockari-backend-app/internal/core/dto/role"
 	entity_audit "github.com/synera-br/lockari-backend-app/internal/core/entity/audit"
 	profile "github.com/synera-br/lockari-backend-app/internal/core/entity/profile"
@@ -257,24 +256,24 @@ func (s *userRoleService) UserExistsInTenant(ctx context.Context, userID, tenant
 	if tenantID == nil || *tenantID == "" {
 		return false, corev1.ErrGenericError("tenant ID cannot be nil or empty")
 	}
-	profile, err := s.profile.GetProfile(ctx, &profile_dto.ProfileFilter{
-		TenantID: tenantID,
-		Uid:      userID,
-	})
+	// profile, err := s.profile.GetProfile(ctx, &profile_dto.ProfileFilter{
+	// 	TenantID: tenantID,
+	// 	Uid:      userID,
+	// })
 
-	if err != nil {
-		return false, fmt.Errorf("error getting user profile: %w", err)
-	}
+	// if err != nil {
+	// 	return false, fmt.Errorf("error getting user profile: %w", err)
+	// }
 
-	if profile == nil || profile.Profile == nil {
-		return false, corev1.ErrGenericError("user profile not found")
-	}
+	// if profile == nil || profile.Profile == nil {
+	// 	return false, corev1.ErrGenericError("user profile not found")
+	// }
 
-	if !profile.Profile.IsActive {
-		return false, corev1.ErrGenericError("user profile is not active")
-	}
+	// if !profile.Profile.IsActive {
+	// 	return false, corev1.ErrGenericError("user profile is not active")
+	// }
 
-	return profile != nil, nil
+	return tenantID != nil, nil
 }
 
 func (s *userRoleService) validateToken(ctx context.Context) (authenticator.UserCustomClaims, error) {
