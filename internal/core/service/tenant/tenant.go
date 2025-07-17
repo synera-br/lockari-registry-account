@@ -202,7 +202,6 @@ func (s *tenantEventService) Create(ctx context.Context, tenant *entity.Tenant) 
 
 	// ##### ATUALIZAR CUSTOM CLAIMS DO FIREBASE AUTH #####
 	claim := entity.NewTenantCustomClaims(&tenantID, nil, &defaultUser)
-	fmt.Println("Setting custom claims for user:", claim)
 	err = s.SetCustomClaims(ctx, &defaultUser, claim)
 	if err != nil {
 		return nil, fmt.Errorf("failed to set custom claims for user: %w", err)

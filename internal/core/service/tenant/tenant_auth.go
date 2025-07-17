@@ -2,6 +2,7 @@ package tenant
 
 import (
 	"context"
+	"fmt"
 
 	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
 	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
@@ -23,6 +24,8 @@ func (s *tenantEventService) SetCustomClaims(ctx context.Context, owner *entity.
 		return corev1.ErrGenericError("tenantID cannot be empty")
 	}
 
+	fmt.Println("Setting custom claims for user:", claims)
+	fmt.Println("Settings of owner:", owner)
 	if err := s.authenticator.SetCustomClaims(ctx, owner.Uid, claims.ToMap()); err != nil {
 		return err
 	}
