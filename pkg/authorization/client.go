@@ -67,6 +67,19 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 		return nil, fmt.Errorf("failed to create OpenFGA client: %w", err)
 	}
 
+	options := client.ClientCheckOptions{}
+	body := client.ClientCheckRequest{
+		User:     "user:zbMdAdazsqO11O5kYtvblC43iUi2",
+		Relation: "can_view",
+		Object:   "tenant:01981aab-55d2-7cc0-a033-39e166a3031f",
+	}
+	data, err := fgaClient.Check(context.Background()).Body(body).Options(options).Execute()
+	if err != nil {
+		fmt.Errorf("failed to check permissions: %w", err)
+	}
+
+	fmt.Println("Check result:", data)
+
 	c := &OpenFGAClient{
 		client:      fgaClient,
 		config:      opts.Config,

@@ -49,14 +49,14 @@ func NewOpenFGAClient(ctx context.Context, config *ConfigOpenFGA, forManagement 
 			ClientCredentialsApiTokenIssuer: config.APITokenIssuer,
 		},
 	}
-	clientID := config.StoreID
+	storeID := config.StoreID
 	if forManagement {
-		clientID = "" // StoreID deve ser vazio para ListStores e CreateStore
+		storeID = "" // StoreID deve ser vazio para ListStores e CreateStore
 	}
 
 	fgaClient, err := client.NewSdkClient(&client.ClientConfiguration{
 		ApiUrl:               "https://api.us1.fga.dev",
-		StoreId:              clientID,
+		StoreId:              storeID,
 		AuthorizationModelId: config.AuthorizationModelID,
 		Credentials:          &creds,
 		Debug:                false,
