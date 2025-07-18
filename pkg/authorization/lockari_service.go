@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/openfga/go-sdk/client"
 )
 
 // LockariService implementa a interface LockariAuthorizationService
@@ -50,6 +52,7 @@ func (ls *LockariService) Check(ctx context.Context, req *CheckRequest) (*CheckR
 	if ls.service != nil {
 		return ls.service.Check(ctx, req)
 	}
+
 	return &CheckResponse{Allowed: false}, nil
 }
 
@@ -133,6 +136,7 @@ func (ls *LockariService) CanAccessVault(ctx context.Context, userID, vaultID st
 
 	response, err := ls.Check(ctx, req)
 	if err != nil {
+		ls.logger.Error("error checking vault permission", "userID", userID, "vaultID", vaultID, "permission", permission, "error", err)
 		return false, fmt.Errorf("error checking vault permission: %w", err)
 	}
 
@@ -232,38 +236,121 @@ func (ls *LockariService) ListAccessibleSecrets(ctx context.Context, userID stri
 // === TENANT OPERATIONS ===
 
 // SetupTenant configura um novo tenant
-func (ls *LockariService) SetupTenant(ctx context.Context, tenantID, ownerID string, features []PlanFeature, relations []string) error {
+// func (ls *LockariService) SetupTenant(ctx context.Context, tenantID, ownerID string, features []PlanFeature, relations []string) error {
 
-	var feats []string
-	for _, feature := range features {
-		feats = append(feats, string(feature))
+// 	var feats []string
+// 	for _, feature := range features {
+// 		feats = append(feats, string(feature))
+// 	}
+
+// 	tuples := make([]Tuple, len(relations)+1)
+
+// 	for i, relation := range relations {
+// 		tuples[i] = Tuple{
+// 			User:     formatUser(ownerID),
+// 			Relation: relation,
+// 			Object:   formatTenant(tenantID),
+// 		}
+// 	}
+
+// 	err := ls.Write(ctx, &WriteRequest{
+// 		Tuples: tuples,
+// 	})
+
+// 	if err != nil {
+// 		return fmt.Errorf("error setting up tenant: %w", err)
+// 	}
+
+// 	return nil
+// }
+
+// CreateNewTenant configura um novo tenant com plano específico
+func (ls *LockariService) CreateNewTenant(ctx context.Context, userID, tenantID string) error {
+	// 1. Configurar tenant com plano específico
+
+	userOwner := TenantOperation{
+		UserType:   TenantObjectUser,
+		UserID:     userID,
+		Relation:   TenantRolePermissionOwner,
+		ObjectType: "tenant",
+		ObjectID:   tenantID,
 	}
 
-	tuples := make([]Tuple, len(relations)+1)
+	operations := []TenantOperation{userOwner}
 
-	for i, relation := range relations {
-		tuples[i] = Tuple{
-			User:     formatUser(ownerID),
-			Relation: relation,
-			Object:   formatTenant(tenantID),
-		}
-	}
-
-	err := ls.Write(ctx, &WriteRequest{
-		Tuples: tuples,
-	})
-
+	// 2. Adicionar usuário como owner do tenant
+	err := ls.AddUserToTenant(ctx, operations)
 	if err != nil {
-		return fmt.Errorf("error setting up tenant: %w", err)
+		ls.logger.Error("failed to add user to tenant", "userID", userID, "tenantID", tenantID, "error", err)
+		return fmt.Errorf("failed to add user to tenant: %w", err)
 	}
 
+	ls.logger.Info(fmt.Sprintf("successfully created new tenant %s for user %s", tenantID, userID))
 	return nil
+	// 3. Configurar recursos específicos do plano
+	// switch plan {
+	// case PlanFree:
+	// 	return ls.setupFreePlanResources(ctx, userID, tenantID)
+	// case PlanPro:
+	// 	return ls.setupProPlanResources(ctx, userID, tenantID)
+	// case PlanEnterprise:
+	// 	return ls.setupEnterprisePlanResources(ctx, userID, tenantID)
+	// default:
+	// 	return fmt.Errorf("unsupported plan type: %s", plan)
+	// }
 }
 
 // AddUserToTenant adiciona um usuário ao tenant
-func (ls *LockariService) AddUserToTenant(ctx context.Context, userID, tenantID string, role TenantRole) error {
+// TenantOperation must be valid
+// It should contain UserType, UserID, Relation, ObjectType, ObjectID, and Action
+// TenantOperation Example:
+//
+//	{
+//	  UserType:   TenantRolePermissionOwner,
+//	  UserID:     "user123",
+//	  Relation:   TenantRolePermissionMember,
+//	  ObjectType: TenantObjectUser,
+//	  ObjectID:   "tenant123",
+//	}
+func (ls *LockariService) AddUserToTenant(ctx context.Context, operations []TenantOperation) error {
 
-	return nil // Implementação simplificada
+	if len(operations) == 0 {
+		ls.logger.Error("no operations provided for AddUserToTenant")
+		return fmt.Errorf("no operations provided")
+	}
+
+	var tuples []TupleOperation
+	for _, operation := range operations {
+		if err := operation.IsValid(); err != nil {
+			ls.logger.Error("invalid tenant operation", "operation", operation, "error", err)
+			return fmt.Errorf("invalid tenant operation: %w", err)
+		}
+
+		user := fmt.Sprintf("%s:%s", operation.UserType, operation.UserID)
+		object := fmt.Sprintf("%s:%s", operation.ObjectType, operation.ObjectID)
+
+		tuple := TupleOperation{
+			User:     user,
+			Relation: string(operation.Relation),
+			Object:   object,
+			Action:   TupleOperationActionWrite,
+		}
+		tuples = append(tuples, tuple)
+	}
+
+	_, err := ls.manageFgaTuples(ctx, tuples)
+	if err != nil {
+		ls.logger.Error("error adding user to tenant", "operations", operations, "error", err)
+		return fmt.Errorf("error adding user to tenant: %w", err)
+	}
+
+	ls.logger.Info(fmt.Sprintf("successfully added %d users to tenant", len(operations)))
+	return nil
+}
+
+// IsTenantMember verifica se o usuário é membro do tenant
+func (ls *LockariService) AddUserToTenantGroup(ctx context.Context, userID, tenantID string) (bool, error) {
+	return true, nil // Implementação simplificada
 }
 
 // RemoveUserFromTenant remove um usuário do tenant
@@ -556,34 +643,6 @@ func extractIDFromObject(object string) string {
 
 // === HELPER METHODS FOR USER/TENANT SETUP ===
 
-// CreateNewUserTenant configura um novo usuário/tenant com plano específico
-func (ls *LockariService) CreateNewUserTenant(ctx context.Context, userID, tenantID string, plan PlanType, relations []string) error {
-	// 1. Configurar tenant com plano específico
-	features := getPlanFeatures(plan)
-	err := ls.SetupTenant(ctx, tenantID, userID, features, relations)
-	if err != nil {
-		return fmt.Errorf("failed to setup tenant: %w", err)
-	}
-
-	// 2. Adicionar usuário como owner do tenant
-	err = ls.AddUserToTenant(ctx, userID, tenantID, TenantRoleOwner)
-	if err != nil {
-		return fmt.Errorf("failed to add user to tenant: %w", err)
-	}
-
-	// 3. Configurar recursos específicos do plano
-	switch plan {
-	case PlanFree:
-		return ls.setupFreePlanResources(ctx, userID, tenantID)
-	case PlanPro:
-		return ls.setupProPlanResources(ctx, userID, tenantID)
-	case PlanEnterprise:
-		return ls.setupEnterprisePlanResources(ctx, userID, tenantID)
-	default:
-		return fmt.Errorf("unsupported plan type: %s", plan)
-	}
-}
-
 // setupFreePlanResources configura recursos para plano gratuito
 func (ls *LockariService) setupFreePlanResources(ctx context.Context, userID, tenantID string) error {
 	// Vault pessoal gratuito
@@ -812,4 +871,66 @@ type TenantPermissionsReport struct {
 	GroupPermissions map[string][]string `json:"group_permissions"`
 	UserPermissions  map[string][]string `json:"user_permissions"`
 	ResourcesByType  map[string][]string `json:"resources_by_type"`
+}
+
+func (ls *LockariService) manageFgaTuples(ctx context.Context, tuples []TupleOperation) (*client.ClientWriteResponse, error) {
+	if ls == nil {
+		return nil, fmt.Errorf("lockariService cannot be nil")
+	}
+
+	if ls.service == nil || ls.service.client == nil {
+		return nil, fmt.Errorf("OpenFGA client is not initialized")
+	}
+
+	if ls.service.client.client == nil {
+		return nil, fmt.Errorf("OpenFGA client is not initialized")
+	}
+
+	if ctx.Err() != nil {
+		return nil, fmt.Errorf("context cancelled: %w", ctx.Err())
+	}
+	if len(tuples) == 0 {
+		return nil, fmt.Errorf("no tuples to write")
+	}
+	var writeTuples []client.ClientTupleKey
+	var deleteTuples []client.ClientTupleKeyWithoutCondition
+	var writeItens client.ClientWriteRequest
+
+	for _, tuple := range tuples {
+		if tuple.Action == "delete" {
+			deleteTuples = append(deleteTuples, client.ClientTupleKeyWithoutCondition{
+				User:     tuple.User,
+				Relation: tuple.Relation,
+				Object:   tuple.Object,
+			})
+		} else {
+			writeTuples = append(writeTuples, client.ClientTupleKey{
+				User:     tuple.User,
+				Relation: tuple.Relation,
+				Object:   tuple.Object,
+			})
+		}
+
+	}
+
+	if len(writeTuples) > 0 {
+		writeItens.Writes = writeTuples
+	}
+
+	if len(deleteTuples) > 0 {
+		writeItens.Deletes = deleteTuples
+	}
+
+	if len(writeItens.Writes) == 0 && len(writeItens.Deletes) == 0 {
+		return nil, fmt.Errorf("no tuples to write or delete")
+	}
+
+	response, err := ls.service.client.client.Write(ctx).Body(writeItens).Execute()
+	if err != nil {
+		return nil, fmt.Errorf("failed to write tuple: %w", err)
+	}
+
+	ls.logger.Info("OpenFGA tuples written and deleted successfully", "write_count", len(writeTuples), "delete_count", len(deleteTuples))
+
+	return response, nil
 }

@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: openfga
       POSTGRES_USER: openfga
       POSTGRES_PASSWORD: ${OPENFGA_DB_PASSWORD:-dev_password_123}
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_HOST_AUTH_METHOD: "trust"
     volumes:
       - postgres_openfga_data:/var/lib/postgresql/data
       - ./docker/openfga/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -49,26 +49,26 @@ services:
       OPENFGA_DATASTORE_URI: postgres://openfga:${OPENFGA_DB_PASSWORD:-dev_password_123}@postgres-openfga:5432/openfga?sslmode=disable
       
       # Server Configuration
-      OPENFGA_HTTP_ADDR: 0.0.0.0:8080
-      OPENFGA_GRPC_ADDR: 0.0.0.0:8081
-      OPENFGA_GRPC_TLS_ENABLED: false
+      OPENFGA_HTTP_ADDR: "0.0.0.0:8080"
+      OPENFGA_GRPC_ADDR: "0.0.0.0:8081"
+      OPENFGA_GRPC_TLS_ENABLED: "false"
       
       # Authentication (none para desenvolvimento)
-      OPENFGA_AUTHN_METHOD: none
+      OPENFGA_AUTHN_METHOD: "none"
       
       # Logging
-      OPENFGA_LOG_LEVEL: info
-      OPENFGA_LOG_FORMAT: json
+      OPENFGA_LOG_LEVEL: "info"
+      OPENFGA_LOG_FORMAT: "json"
       
       # Performance
-      OPENFGA_DATASTORE_MAX_OPEN_CONNS: 30
-      OPENFGA_DATASTORE_MAX_IDLE_CONNS: 10
-      OPENFGA_DATASTORE_CONN_MAX_IDLE_TIME: 30s
-      OPENFGA_DATASTORE_CONN_MAX_LIFETIME: 300s
+      OPENFGA_DATASTORE_MAX_OPEN_CONNS: "30"
+      OPENFGA_DATASTORE_MAX_IDLE_CONNS: "10"
+      OPENFGA_DATASTORE_CONN_MAX_IDLE_TIME: "30s"
+      OPENFGA_DATASTORE_CONN_MAX_LIFETIME: "300s"
       
       # Request limits
-      OPENFGA_MAX_TUPLES_PER_WRITE: 100
-      OPENFGA_MAX_TYPES_PER_AUTHORIZATION_MODEL: 100
+      OPENFGA_MAX_TUPLES_PER_WRITE: "100"
+      OPENFGA_MAX_TYPES_PER_AUTHORIZATION_MODEL: "100"
       
     ports:
       - "8080:8080"  # HTTP API

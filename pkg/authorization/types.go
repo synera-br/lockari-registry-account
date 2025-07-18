@@ -763,3 +763,19 @@ func (pt PlanType) IsValid() bool {
 func (pt PlanType) String() string {
 	return string(pt)
 }
+
+// TupleOperationAction representa as ações que podem ser realizadas em uma operação de tupla
+// e.g., write, delete
+type TupleOperationAction string
+
+const (
+	TupleOperationActionWrite  TupleOperationAction = "write"
+	TupleOperationActionDelete TupleOperationAction = "delete"
+)
+
+type TupleOperation struct {
+	User     string
+	Relation string
+	Object   string
+	Action   TupleOperationAction // "write" ou "delete"
+}

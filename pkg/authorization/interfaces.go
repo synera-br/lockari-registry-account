@@ -62,10 +62,13 @@ type LockariAuthorizationService interface {
 	// === TENANT OPERATIONS ===
 
 	// SetupTenant configura um novo tenant
-	SetupTenant(ctx context.Context, tenantID, ownerID string, features []PlanFeature, relations []string) error
+	// SetupTenant(ctx context.Context, tenantID, ownerID string, features []PlanFeature, relations []string) error
+
+	// CreateNewTenant cria um novo tenant com o usuário como owner
+	CreateNewTenant(ctx context.Context, userID, tenantID string) error
 
 	// AddUserToTenant adiciona um usuário ao tenant
-	AddUserToTenant(ctx context.Context, userID, tenantID string, role TenantRole) error
+	AddUserToTenant(ctx context.Context, operations []TenantOperation) error
 
 	// RemoveUserFromTenant remove um usuário do tenant
 	RemoveUserFromTenant(ctx context.Context, userID, tenantID string) error
