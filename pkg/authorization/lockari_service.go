@@ -903,7 +903,7 @@ func (ls *LockariService) manageFgaTuples(ctx context.Context, tuples []TupleOpe
 	}
 
 	if ls.service.client.client == nil {
-		return nil, fmt.Errorf("\nOpenFGA client is not initialized")
+		fmt.Errorf("\nOpenFGA client is not initialized")
 	}
 
 	fmt.Println("\n [manageFgaTuples] Writing tuples to OpenFGA")
