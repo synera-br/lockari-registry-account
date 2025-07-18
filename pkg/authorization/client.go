@@ -14,6 +14,7 @@ import (
 type OpenFGAClient struct {
 	client      *client.OpenFgaClient
 	config      *Config
+	ModelId     string
 	logger      Logger
 	cache       interface{} // Simplified for now
 	mu          sync.RWMutex
@@ -85,23 +86,13 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 
 	c := &OpenFGAClient{
 		client:      fgaClient,
+		ModelId:     opts.Config.AuthorizationModelID,
 		config:      opts.Config,
 		logger:      opts.Logger,
 		cache:       opts.Cache,
 		healthState: HealthStateHealthy,
 	}
 
-	options := client.ClientCheckOptions{}
-	body := client.ClientCheckRequest{
-		User:     "user:zbMdAdazsqO11O5kYtvblC43iUi2",
-		Relation: "can_view",
-		Object:   "tenant:01981aab-55d2-7cc0-a033-39e166a3031f",
-	}
-	data, err := fgaClient.Check(context.Background()).Body(body).Options(options).Execute()
-	if err != nil {
-		fmt.Errorf("failed to check permissions: %w", err)
-	}
-	fmt.Println("Check result:", data)
 	response := c.HealthCheck(context.Background()) // Initial health check
 	fmt.Println("\n=== DEBUGGING OpenFGA Client ===")
 	fmt.Printf("Status: %s\n", response.Status)
@@ -283,7 +274,10 @@ func (c *OpenFGAClient) performCheck(ctx context.Context, req *CheckRequest) (*C
 	// TODO: Add context support when CheckRequestWithContext is used
 
 	// Execute check
-	response, err := c.client.Check(ctx).Body(checkReq).Execute()
+	options := client.ClientCheckOptions{
+		AuthorizationModelId: &c.ModelId,
+	}
+	response, err := c.client.Check(ctx).Body(checkReq).Options(options).Execute()
 	if err != nil {
 		return nil, fmt.Errorf("OpenFGA check failed: %w", err)
 	}
@@ -305,7 +299,9 @@ func (c *OpenFGAClient) performListObjects(ctx context.Context, req *ListObjects
 	// TODO: Add context support when needed
 
 	// Execute list objects
-	response, err := c.client.ListObjects(ctx).Body(listReq).Execute()
+	response, err := c.client.ListObjects(ctx).Body(listReq).Options(client.ClientListObjectsOptions{
+		AuthorizationModelId: &c.ModelId,
+	}).Execute()
 	if err != nil {
 		return nil, fmt.Errorf("OpenFGA list objects failed: %w", err)
 	}

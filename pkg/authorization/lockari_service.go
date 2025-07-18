@@ -925,7 +925,10 @@ func (ls *LockariService) manageFgaTuples(ctx context.Context, tuples []TupleOpe
 		return nil, fmt.Errorf("no tuples to write or delete")
 	}
 
-	response, err := ls.service.client.client.Write(ctx).Body(writeItens).Execute()
+	options := client.ClientWriteOptions{
+		AuthorizationModelId: &ls.service.client.ModelId,
+	}
+	response, err := ls.service.client.client.Write(ctx).Body(writeItens).Options(options).Execute()
 	if err != nil {
 		return nil, fmt.Errorf("failed to write tuple: %w", err)
 	}
