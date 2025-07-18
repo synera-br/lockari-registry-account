@@ -29,6 +29,8 @@ type ClientOptions struct {
 
 // NewOpenFGAClient creates a new OpenFGA client with all configured services
 func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
+	fmt.Println("\nInitializing OpenFGA client with options:", *opts.Config)
+
 	if opts.Config == nil {
 		return nil, ErrInvalidConfig
 	}
@@ -37,27 +39,28 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 
+	// Add credentials if provided
+
+	creds := &credentials.Credentials{
+		Method: credentials.CredentialsMethodClientCredentials,
+		Config: &credentials.Config{
+			ClientCredentialsClientId:       opts.Config.ClientID,
+			ClientCredentialsClientSecret:   opts.Config.ClientSecret,
+			ClientCredentialsApiTokenIssuer: opts.Config.APITokenIssuer,
+			ClientCredentialsApiAudience:    opts.Config.APIAudience,
+		},
+	}
+	fmt.Println("\n Credentials for OpenFGA client:", *creds)
+
 	// Create OpenFGA client configuration
 	config := &client.ClientConfiguration{
-		ApiScheme:            "https",
-		ApiHost:              opts.Config.APIURL,
+		ApiUrl:               opts.Config.APIURL,
 		StoreId:              opts.Config.StoreID,
 		AuthorizationModelId: opts.Config.AuthorizationModelID,
+		Credentials:          creds,
 	}
 
-	// Add credentials if provided
-	if opts.Config.ClientID != "" && opts.Config.ClientSecret != "" {
-		config.Credentials = &credentials.Credentials{
-			Method: credentials.CredentialsMethodClientCredentials,
-			Config: &credentials.Config{
-				ClientCredentialsClientId:       opts.Config.ClientID,
-				ClientCredentialsClientSecret:   opts.Config.ClientSecret,
-				ClientCredentialsApiTokenIssuer: opts.Config.APITokenIssuer,
-				ClientCredentialsApiAudience:    opts.Config.APIAudience,
-			},
-		}
-	}
-
+	fmt.Println("\nOpenFGA client configuration:", *config)
 	// Create OpenFGA client
 	fgaClient, err := client.NewSdkClient(config)
 	if err != nil {

@@ -74,7 +74,7 @@ type Config struct {
 
 // NewConfig cria uma nova configuração com valores padrão
 func NewConfig() *Config {
-	return &Config{
+	cfg := &Config{
 		// OpenFGA Server
 		APIURL:               "http://localhost:8080",
 		StoreID:              "",
@@ -136,6 +136,9 @@ func NewConfig() *Config {
 		Development: false,
 		Debug:       false,
 	}
+
+	fmt.Println("\nUsing default OpenFGA configuration:", *cfg)
+	return cfg
 }
 
 // Validate valida se a configuração está correta
