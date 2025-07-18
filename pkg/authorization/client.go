@@ -90,6 +90,17 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 		healthState: HealthStateHealthy,
 	}
 
+	options := client.ClientCheckOptions{}
+	body := client.ClientCheckRequest{
+		User:     "user:zbMdAdazsqO11O5kYtvblC43iUi2",
+		Relation: "can_view",
+		Object:   "tenant:01981aab-55d2-7cc0-a033-39e166a3031f",
+	}
+	data, err := fgaClient.Check(context.Background()).Body(body).Options(options).Execute()
+	if err != nil {
+		fmt.Errorf("failed to check permissions: %w", err)
+	}
+	fmt.Println("Check result:", data)
 	response := c.HealthCheck(context.Background()) // Initial health check
 	fmt.Println("\n=== DEBUGGING OpenFGA Client ===")
 	fmt.Printf("Status: %s\n", response.Status)

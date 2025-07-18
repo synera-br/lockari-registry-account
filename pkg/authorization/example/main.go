@@ -28,11 +28,11 @@ func NewConfigOpenFGA() *ConfigOpenFGA {
 	return &ConfigOpenFGA{
 		APIURL:               "https://api.us1.fga.dev",
 		StoreID:              "01K0DH8V7Q7NDTJ73KTDPERC81", // Será detectado automaticamente se vazio
-		AuthorizationModelID: "01K0DHGXNPQKJFW9BP933C1FQ2", // Será detectado automaticamente se vazio
+		AuthorizationModelID: "01K0ERJX9TJM30Q2V3AWM0A56N", // Será detectado automaticamente se vazio
 		APITokenIssuer:       "auth.fga.dev",               // Em produção, deve ser o emissor do token JWT
 		APIAudience:          "https://api.us1.fga.dev/",
 		ClientID:             "96WkRocwyATz9Cp3oeWMeWY2HmWagPOw",
-		ClientSecret:         "8l0bn-wW0g7ksJQcXcJMIHxEU1Lraejknd--uFD2injJa9tPeQ6F5QTzMwT0ouFq",
+		ClientSecret:         "OWXAeJRxEwqNON458ctcW087LJfdWwWzsObglbJro8xe1TsgXlhRdIc3MMN8T0jv",
 	}
 }
 
@@ -512,7 +512,7 @@ func main() {
 	fmt.Println("Done Writing Tuples")
 
 	// Set the model ID
-	err = fgaClient.SetAuthorizationModelId(latestAuthorizationModel.AuthorizationModel.Id)
+	err = fgaClient.SetAuthorizationModelId("01K0ERJX9TJM30Q2V3AWM0A56N")
 	if err != nil {
 		fmt.Printf("error setting authorization model ID: %w", err)
 	}
