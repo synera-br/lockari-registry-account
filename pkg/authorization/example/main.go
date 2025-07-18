@@ -31,8 +31,8 @@ func NewConfigOpenFGA() *ConfigOpenFGA {
 		AuthorizationModelID: "01K0ERJX9TJM30Q2V3AWM0A56N", // Será detectado automaticamente se vazio
 		APITokenIssuer:       "auth.fga.dev",               // Em produção, deve ser o emissor do token JWT
 		APIAudience:          "https://api.us1.fga.dev/",
-		ClientID:             "96WkRocwyATz9Cp3oeWMeWY2HmWagPOw",
-		ClientSecret:         "OWXAeJRxEwqNON458ctcW087LJfdWwWzsObglbJro8xe1TsgXlhRdIc3MMN8T0jv",
+		ClientID:             "ocidGaDVAixCDiFcdtO1tq8uC7Icfy9l",
+		ClientSecret:         "Wm4E88PVjnL5EP3gcWrWG8x-ntxXPqUh-59N3jqs4KLDkIeBHoCEyzd5oSjjDv_F",
 	}
 }
 
@@ -40,26 +40,24 @@ func NewOpenFGAClient(ctx context.Context, config *ConfigOpenFGA, forManagement 
 	if config == nil {
 		return nil, fmt.Errorf("config cannot be nil")
 	}
-	creds := credentials.Credentials{
-		Method: credentials.CredentialsMethodClientCredentials,
-		Config: &credentials.Config{
-			ClientCredentialsClientId:       config.ClientID,
-			ClientCredentialsClientSecret:   config.ClientSecret,
-			ClientCredentialsApiAudience:    config.APIAudience,
-			ClientCredentialsApiTokenIssuer: config.APITokenIssuer,
-		},
-	}
 	storeID := config.StoreID
 	if forManagement {
 		storeID = "" // StoreID deve ser vazio para ListStores e CreateStore
 	}
 
 	fgaClient, err := client.NewSdkClient(&client.ClientConfiguration{
-		ApiUrl:               "https://api.us1.fga.dev",
+		ApiUrl:               config.APIURL,
 		StoreId:              storeID,
 		AuthorizationModelId: config.AuthorizationModelID,
-		Credentials:          &creds,
-		Debug:                false,
+		Credentials: &credentials.Credentials{
+			Method: credentials.CredentialsMethodClientCredentials,
+			Config: &credentials.Config{
+				ClientCredentialsClientId:       config.ClientID,
+				ClientCredentialsClientSecret:   config.ClientSecret,
+				ClientCredentialsApiAudience:    config.APIAudience,
+				ClientCredentialsApiTokenIssuer: config.APITokenIssuer,
+			},
+		},
 	})
 
 	if err != nil {
