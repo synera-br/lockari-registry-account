@@ -27,6 +27,22 @@ type ClientOptions struct {
 	Cache  interface{} // Simplified for now
 }
 
+func (c *ClientOptions) ToMap() map[string]interface{} {
+
+	config := map[string]interface{}{
+		"APIURL":               c.Config.APIURL,
+		"StoreID":              c.Config.StoreID,
+		"AuthorizationModelID": c.Config.AuthorizationModelID,
+		"APITokenIssuer":       c.Config.APITokenIssuer,
+		"APIAudience":          c.Config.APIAudience,
+		"ClientID":             c.Config.ClientID,
+		"ClientSecret":         c.Config.ClientSecret,
+		"Scopes":               c.Config.Scopes,
+	}
+
+	return config
+}
+
 // NewOpenFGAClient creates a new OpenFGA client with all configured services
 func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 
@@ -37,6 +53,9 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 	if err := opts.Config.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
+
+	fmt.Println("\nUsing OpenFGA configuration:")
+	fmt.Println(opts.ToMap())
 
 	// Add credentials if provided
 	creds := &credentials.Credentials{
