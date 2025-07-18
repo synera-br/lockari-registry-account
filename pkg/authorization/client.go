@@ -54,7 +54,7 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 
 	// Create OpenFGA client configuration
 	config := &client.ClientConfiguration{
-		ApiUrl:               opts.Config.APIURL,
+		ApiUrl:               fmt.Sprintf("https://%s", opts.Config.APIURL),
 		StoreId:              opts.Config.StoreID,
 		AuthorizationModelId: opts.Config.AuthorizationModelID,
 		Credentials:          creds,
