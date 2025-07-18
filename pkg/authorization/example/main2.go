@@ -1,0 +1,367 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+
+	openfga "github.com/openfga/go-sdk"
+	"github.com/openfga/go-sdk/client"
+	"github.com/openfga/go-sdk/credentials"
+)
+
+type ConfigOpenFGA struct {
+	APIURL               string
+	StoreID              string
+	AuthorizationModelID string
+	APITokenIssuer       string
+	APIAudience          string
+	ClientID             string
+	ClientSecret         string
+	Scopes               string
+}
+
+var openFGAClient *client.OpenFgaClient
+
+func NewConfigOpenFGA() *ConfigOpenFGA {
+	return &ConfigOpenFGA{
+		APIURL:               "https://api.us1.fga.dev",
+		StoreID:              "01K0EWZXWCT51KJGC1N4W6H8VS",
+		AuthorizationModelID: "01K0EX38CFHAZEEM4AJY35FVVG", // Será detectado automaticamente se vazio
+		APITokenIssuer:       "auth.fga.dev",               // Em produção, deve ser o emissor do token JWT
+		APIAudience:          "https://api.us1.fga.dev/",
+		ClientID:             "FXe27xUppMIiXTrqVeSrKenxtvqp5R5m",
+		ClientSecret:         "kWxfewQ0WWHU06ssHFGkW6_HHHLrPle7FWMyAxSzSm5N_ILx0D_zHbYk-7UAkuJF",
+	}
+}
+
+func mainInner() error {
+
+	cfg := NewConfigOpenFGA()
+	if cfg == nil {
+		return fmt.Errorf("failed to create OpenFGA configuration")
+	}
+
+	ctx := context.Background()
+	creds := credentials.Credentials{
+		Method: credentials.CredentialsMethodClientCredentials,
+		Config: &credentials.Config{
+			ClientCredentialsClientId:       cfg.ClientID,
+			ClientCredentialsClientSecret:   cfg.ClientSecret,
+			ClientCredentialsApiAudience:    cfg.APIAudience,
+			ClientCredentialsApiTokenIssuer: cfg.APITokenIssuer,
+		},
+	}
+
+	apiUrl := cfg.APIURL
+	if apiUrl == "" {
+		log.Fatalln("API URL is required")
+	}
+
+	storeID := cfg.StoreID
+	if storeID != "" {
+		storeID = ""
+	}
+
+	fgaClient, err := client.NewSdkClient(&client.ClientConfiguration{
+		ApiUrl:               apiUrl,
+		StoreId:              storeID,
+		AuthorizationModelId: cfg.AuthorizationModelID,
+		Credentials:          &creds,
+		Debug:                true,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// ListStores
+	fmt.Println("Listing Stores")
+	stores1, err := fgaClient.ListStores(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Stores Count: %d\n", len(stores1.GetStores()))
+
+	// CreateStore
+	fmt.Println("Creating Test Store")
+	store, err := fgaClient.CreateStore(ctx).Body(client.ClientCreateStoreRequest{Name: "Test Store"}).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Test Store ID: %v\n", store.Id)
+
+	// Set the store id
+	fgaClient.SetStoreId(store.Id)
+
+	// ListStores after Create
+	fmt.Println("Listing Stores")
+	stores, err := fgaClient.ListStores(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Stores Count: %d\n", len(stores.Stores))
+
+	// GetStore
+	fmt.Println("Getting Current Store")
+	currentStore, err := fgaClient.GetStore(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Println("Current Store Name: %v\n" + currentStore.Name)
+
+	// ReadAuthorizationModels
+	fmt.Println("Reading Authorization Models")
+	models, err := fgaClient.ReadAuthorizationModels(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Models Count: %d\n", len(models.AuthorizationModels))
+
+	// ReadLatestAuthorizationModel
+	latestAuthorizationModel, err := fgaClient.ReadLatestAuthorizationModel(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	if latestAuthorizationModel.AuthorizationModel != nil {
+		fmt.Printf("Latest Authorization Model ID: %v\n", (*latestAuthorizationModel.AuthorizationModel).Id)
+	} else {
+		fmt.Println("Latest Authorization Model not found")
+	}
+
+	// WriteAuthorizationModel
+	fmt.Println("Writing an Authorization Model")
+	body := client.ClientWriteAuthorizationModelRequest{
+		SchemaVersion: "1.1",
+		TypeDefinitions: []openfga.TypeDefinition{
+			{
+				Type:      "user",
+				Relations: &map[string]openfga.Userset{},
+			},
+			{
+				Type: "document",
+				Relations: &map[string]openfga.Userset{
+					"writer": {This: &map[string]interface{}{}},
+					"viewer": {Union: &openfga.Usersets{
+						Child: []openfga.Userset{
+							{This: &map[string]interface{}{}},
+							{ComputedUserset: &openfga.ObjectRelation{
+								Object:   openfga.PtrString(""),
+								Relation: openfga.PtrString("writer"),
+							}},
+						},
+					}},
+				},
+				Metadata: &openfga.Metadata{
+					Relations: &map[string]openfga.RelationMetadata{
+						"writer": {
+							DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+								{Type: "user"},
+								{Type: "user", Condition: openfga.PtrString("ViewCountLessThan200")},
+							},
+						},
+						"viewer": {
+							DirectlyRelatedUserTypes: &[]openfga.RelationReference{
+								{Type: "user"},
+							},
+						},
+					},
+				},
+			},
+		},
+		Conditions: &map[string]openfga.Condition{
+			"ViewCountLessThan200": {
+				Name:       "ViewCountLessThan200",
+				Expression: "ViewCount < 200",
+				Parameters: &map[string]openfga.ConditionParamTypeRef{
+					"ViewCount": {
+						TypeName: openfga.TYPENAME_INT,
+					},
+					"Type": {
+						TypeName: openfga.TYPENAME_STRING,
+					},
+					"Name": {
+						TypeName: openfga.TYPENAME_STRING,
+					},
+				},
+			},
+		},
+	}
+	authorizationModel, err := fgaClient.WriteAuthorizationModel(ctx).Body(body).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Authorization Model ID: %v\n", authorizationModel.AuthorizationModelId)
+
+	// ReadAuthorizationModels - after Write
+	fmt.Println("Reading Authorization Models")
+	models, err = fgaClient.ReadAuthorizationModels(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Models Count: %d\n", len(models.AuthorizationModels))
+
+	// ReadLatestAuthorizationModel - after Write
+	latestAuthorizationModel, err = fgaClient.ReadLatestAuthorizationModel(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Latest Authorization Model ID: %v\n", (*latestAuthorizationModel.AuthorizationModel).Id)
+
+	// Write
+	fmt.Println("Writing Tuples")
+	_, err = fgaClient.Write(ctx).Body(client.ClientWriteRequest{
+		Writes: []client.ClientTupleKey{
+			{
+				User:     "user:anne",
+				Relation: "writer",
+				Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+				Condition: &openfga.RelationshipCondition{
+					Name:    "ViewCountLessThan200",
+					Context: &map[string]interface{}{"Name": "Roadmap", "Type": "document"},
+				},
+			},
+		},
+	}).Options(client.ClientWriteOptions{
+		AuthorizationModelId: &authorizationModel.AuthorizationModelId,
+	}).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Println("Done Writing Tuples")
+
+	// Set the model ID
+	err = fgaClient.SetAuthorizationModelId(latestAuthorizationModel.AuthorizationModel.Id)
+	if err != nil {
+		return err
+	}
+
+	// Read
+	fmt.Println("Reading Tuples")
+	readTuples, err := fgaClient.Read(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Read Tuples: %v\n", readTuples)
+
+	// ReadChanges
+	fmt.Println("Reading Tuple Changes")
+	readChangesTuples, err := fgaClient.ReadChanges(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Read Changes Tuples: %v\n", readChangesTuples)
+
+	// Check
+	fmt.Println("Checking for access")
+	failingCheckResponse, err := fgaClient.Check(ctx).Body(client.ClientCheckRequest{
+		User:     "user:anne",
+		Relation: "viewer",
+		Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+	}).Execute()
+	if err != nil {
+		fmt.Printf("Failed due to: %w\n", err.Error())
+	} else {
+		fmt.Printf("Allowed: %v\n", failingCheckResponse.Allowed)
+	}
+
+	// Checking for access with context
+	fmt.Println("Checking for access with context")
+	checkResponse, err := fgaClient.Check(ctx).Body(client.ClientCheckRequest{
+		User:     "user:anne",
+		Relation: "viewer",
+		Object:   "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+		Context:  &map[string]interface{}{"ViewCount": 100},
+	}).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Allowed: %v\n", checkResponse.Allowed)
+
+	// ListObjects
+	fmt.Println("Listing objects user has access to")
+	listObjectsResponse, err := fgaClient.ListObjects(ctx).Body(client.ClientListObjectsRequest{
+		User:     "user:anne",
+		Relation: "viewer",
+		Type:     "document",
+		Context:  &map[string]interface{}{"ViewCount": 100},
+	}).Execute()
+	fmt.Printf("Response: Objects = %v\n", listObjectsResponse.Objects)
+
+	// ListRelations
+	fmt.Println("Listing relations user has with object")
+	listRelationsResponse, err := fgaClient.ListRelations(ctx).Body(client.ClientListRelationsRequest{
+		User:      "user:anne",
+		Object:    "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+		Relations: []string{"viewer"},
+	}).Execute()
+	fmt.Printf("Response: Relations = %v\n", listRelationsResponse.Relations)
+
+	// ListUsers
+	fmt.Println("Listing user who have access to object")
+	listUsersResponse, err := fgaClient.ListUsers(ctx).Body(client.ClientListUsersRequest{
+		Relation: "viewer",
+		Object: openfga.FgaObject{
+			Type: "document",
+			Id:   "roadmap",
+		},
+		UserFilters: []openfga.UserTypeFilter{{
+			Type: "user",
+		}},
+	}).Execute()
+	fmt.Printf("Response: Users = %v\n", listUsersResponse.Users)
+
+	// WriteAssertions
+	_, err = fgaClient.WriteAssertions(ctx).Body([]client.ClientAssertion{
+		{
+			User:        "user:carl",
+			Relation:    "writer",
+			Object:      "document:budget",
+			Expectation: true,
+			Context:     &map[string]interface{}{"Name": "Roadmap", "Type": "document"},
+			ContextualTuples: []client.ClientContextualTupleKey{
+				{
+					User:     "user:carl",
+					Relation: "writer",
+					Object:   "document:budget",
+				},
+			},
+		},
+		{
+			User:        "user:anne",
+			Relation:    "viewer",
+			Object:      "document:0192ab2a-d83f-756d-9397-c5ed9f3cb69a",
+			Expectation: false,
+		},
+	}).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Println("Assertions updated")
+
+	// ReadAssertions
+	fmt.Println("Reading Assertions")
+	assertions, err := fgaClient.ReadAssertions(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Assertions: %v\n", assertions.GetAssertions())
+
+	// DeleteStore
+	fmt.Println("Deleting Current Store")
+	_, err = fgaClient.DeleteStore(ctx).Execute()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Deleted Store: %v\n", currentStore.Name)
+
+	return nil
+}
+
+func main() {
+	if err := mainInner(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+}
