@@ -92,12 +92,12 @@ func WriteAuthorizationModel(ctx context.Context, fgaClient *client.OpenFgaClien
 		return nil, fmt.Errorf("context cancelled: %w", ctx.Err())
 	}
 
-	// response, err := fgaClient.WriteAuthorizationModel(ctx).Body(model).Execute()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to write authorization model: %w", err)
-	// }
+	response, err := fgaClient.WriteAuthorizationModel(ctx).Body(model).Execute()
+	if err != nil {
+		return nil, fmt.Errorf("failed to write authorization model: %w", err)
+	}
 
-	// fmt.Println("Authorization Model written successfully:", response)
+	fmt.Println("Authorization Model written successfully:", response)
 	return nil, nil
 }
 

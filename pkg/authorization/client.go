@@ -74,6 +74,7 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 		StoreId:              opts.Config.StoreID,
 		AuthorizationModelId: opts.Config.AuthorizationModelID,
 		Credentials:          creds,
+		Debug:                true,
 	}
 
 	// Create OpenFGA client
