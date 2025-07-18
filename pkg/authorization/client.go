@@ -74,6 +74,13 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 	response := c.HealthCheck(context.Background()) // Initial health check
 	fmt.Println("\n=== DEBUGGING OpenFGA Client ===")
 	fmt.Printf("Status: %s\n", response.Status)
+	fmt.Printf("Message: %s\n", response.Status.String())
+	if response.Status != HealthStateHealthy {
+		fmt.Printf("Error: %s\n", response.Message)
+		c.updateHealthState(HealthStateUnhealthy)
+	} else {
+		fmt.Printf("Health check successful: %+v\n", response)
+	}
 
 	return c, nil
 }
