@@ -29,7 +29,6 @@ type ClientOptions struct {
 
 // NewOpenFGAClient creates a new OpenFGA client with all configured services
 func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
-	fmt.Println("\nInitializing OpenFGA client with options:", *opts.Config)
 
 	if opts.Config == nil {
 		return nil, ErrInvalidConfig
@@ -40,7 +39,6 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 	}
 
 	// Add credentials if provided
-
 	creds := &credentials.Credentials{
 		Method: credentials.CredentialsMethodClientCredentials,
 		Config: &credentials.Config{
@@ -50,7 +48,6 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 			ClientCredentialsApiAudience:    opts.Config.APIAudience,
 		},
 	}
-	fmt.Println("\n Credentials for OpenFGA client:", *creds)
 
 	// Create OpenFGA client configuration
 	config := &client.ClientConfiguration{
@@ -60,25 +57,11 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 		Credentials:          creds,
 	}
 
-	fmt.Println("\nOpenFGA client configuration:", *config)
 	// Create OpenFGA client
 	fgaClient, err := client.NewSdkClient(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OpenFGA client: %w", err)
 	}
-
-	options := client.ClientCheckOptions{}
-	body := client.ClientCheckRequest{
-		User:     "user:zbMdAdazsqO11O5kYtvblC43iUi2",
-		Relation: "can_view",
-		Object:   "tenant:01981aab-55d2-7cc0-a033-39e166a3031f",
-	}
-	data, err := fgaClient.Check(context.Background()).Body(body).Options(options).Execute()
-	if err != nil {
-		fmt.Errorf("failed to check permissions: %w", err)
-	}
-
-	fmt.Println("Check result:", data)
 
 	c := &OpenFGAClient{
 		client:      fgaClient,
@@ -87,6 +70,10 @@ func NewOpenFGAClient(opts ClientOptions) (*OpenFGAClient, error) {
 		cache:       opts.Cache,
 		healthState: HealthStateHealthy,
 	}
+
+	response := c.HealthCheck(context.Background()) // Initial health check
+	fmt.Println("\n=== DEBUGGING OpenFGA Client ===")
+	fmt.Printf("Status: %s\n", response.Status)
 
 	return c, nil
 }
