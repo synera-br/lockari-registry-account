@@ -889,9 +889,69 @@ func (ls *LockariService) manageFgaTuples(ctx context.Context, tuples []TupleOpe
 	if ctx.Err() != nil {
 		return nil, fmt.Errorf("context cancelled: %w", ctx.Err())
 	}
+
 	if len(tuples) == 0 {
 		return nil, fmt.Errorf("no tuples to write")
 	}
+
+	fmt.Println("\n [manageFgaTuples] Writing tuples to OpenFGA")
+	body3 := client.ClientWriteRequest{
+		Writes: []client.ClientTupleKey{
+			{
+				User:     "user:john",
+				Relation: "manager",
+				Object:   "tenant:manually",
+			},
+		},
+	}
+
+	options2 := client.ClientWriteOptions{
+		AuthorizationModelId: &ls.service.client.ModelId,
+	}
+
+	data3, err := ls.service.client.client.Write(context.Background()).
+		Body(body3).
+		Options(options2).
+		Execute()
+
+	if err != nil {
+		fmt.Println("Failed to execute write:", err)
+	}
+
+	fmt.Println("Write result:", data3)
+
+	fmt.Println("\n [manageFgaTuples] Checking permission after write of anne as manager on tenant roadmap")
+	check, err := ls.service.client.client.Check(context.Background()).
+		Body(client.ClientCheckRequest{
+			User:     "user:anne",
+			Relation: "manager",
+			Object:   "tenant:roadmap",
+		}).Options(client.ClientCheckOptions{
+		AuthorizationModelId: &ls.service.client.ModelId,
+	}).Execute()
+	if err != nil {
+		fmt.Println("Failed to execute check after write:", err)
+
+	}
+	fmt.Println("Check after write result:", check.GetAllowed())
+
+	fmt.Println("\n [manageFgaTuples] Checking permission after write of john as manager on tenant manually")
+	check, err = ls.service.client.client.Check(context.Background()).
+		Body(client.ClientCheckRequest{
+			User:     "user:john",
+			Relation: "manager",
+			Object:   "tenant:manually",
+		}).Options(client.ClientCheckOptions{
+		AuthorizationModelId: &ls.service.client.ModelId,
+	}).Execute()
+	if err != nil {
+		fmt.Println("Failed to execute check after write:", err)
+
+	}
+	fmt.Println("Check after write result:", check.GetAllowed())
+
+	fmt.Println("OpenFGA client initialized successfully")
+
 	var writeTuples []client.ClientTupleKey
 	var deleteTuples []client.ClientTupleKeyWithoutCondition
 	var writeItens client.ClientWriteRequest
