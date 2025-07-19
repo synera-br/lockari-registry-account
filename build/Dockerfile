@@ -1,4 +1,4 @@
-FROM golang:1.24 AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY . .
 RUN go mod tidy
 
 # RUN go build -o /manager cmd/main.go
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -a -o /manager cmd/main.go
+RUN time CGO_ENABLED=0 GOOS=linux go build -v -ldflags='-s -w' -a -o /manager cmd/main.go
 
 
 FROM gcr.io/distroless/static:nonroot
