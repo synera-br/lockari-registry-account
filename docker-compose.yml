@@ -1,126 +1,24 @@
 version: '3.8'
 
 services:
-  # PostgreSQL para OpenFGA
-  postgres-openfga:
-    image: postgres:15-alpine
-    container_name: lockari-postgres-openfga
-    environment:
-      POSTGRES_DB: openfga
-      POSTGRES_USER: openfga
-      POSTGRES_PASSWORD: ${OPENFGA_DB_PASSWORD:-dev_password_123}
-      POSTGRES_HOST_AUTH_METHOD: "trust"
+  lockari-backend:
+    build:
+      dockerfile: build/Dockerfile
+      context: .
+    container-name: lbackend
     volumes:
-      - postgres_openfga_data:/var/lib/postgresql/data
-      - ./docker/openfga/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - "5433:5432"
+      - ./config:/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lbackend.rule=Host(`api-stg.lockari.com`)"
+      - "traefik.http.routers.lbackend.entrypoints=websecure"
+      - "traefik.http.routers.lbackend.tls=true"
+      - "traefik.http.routers.lbackend.tls.certresolver=letsencrypt"
+      #- "traefik.http.services.lbackend.loadbalancer.server.port=80"
     networks:
-      - lockari-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U openfga -d openfga"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  # OpenFGA Database Migration
-  openfga-migrate:
-    image: openfga/openfga:v1.4.3
-    container_name: lockari-openfga-migrate
-    command: migrate
-    environment:
-      OPENFGA_DATASTORE_ENGINE: postgres
-      OPENFGA_DATASTORE_URI: postgres://openfga:${OPENFGA_DB_PASSWORD:-dev_password_123}@postgres-openfga:5432/openfga?sslmode=disable
-    depends_on:
-      postgres-openfga:
-        condition: service_healthy
-    networks:
-      - lockari-network
-    restart: "no"
-
-  # OpenFGA Server
-  openfga:
-    image: openfga/openfga:v1.4.3
-    container_name: lockari-openfga
-    command: run
-    environment:
-      # Database Configuration
-      OPENFGA_DATASTORE_ENGINE: postgres
-      OPENFGA_DATASTORE_URI: postgres://openfga:${OPENFGA_DB_PASSWORD:-dev_password_123}@postgres-openfga:5432/openfga?sslmode=disable
-      
-      # Server Configuration
-      OPENFGA_HTTP_ADDR: "0.0.0.0:8080"
-      OPENFGA_GRPC_ADDR: "0.0.0.0:8081"
-      OPENFGA_GRPC_TLS_ENABLED: "false"
-      
-      # Authentication (none para desenvolvimento)
-      OPENFGA_AUTHN_METHOD: "none"
-      
-      # Logging
-      OPENFGA_LOG_LEVEL: "info"
-      OPENFGA_LOG_FORMAT: "json"
-      
-      # Performance
-      OPENFGA_DATASTORE_MAX_OPEN_CONNS: "30"
-      OPENFGA_DATASTORE_MAX_IDLE_CONNS: "10"
-      OPENFGA_DATASTORE_CONN_MAX_IDLE_TIME: "30s"
-      OPENFGA_DATASTORE_CONN_MAX_LIFETIME: "300s"
-      
-      # Request limits
-      OPENFGA_MAX_TUPLES_PER_WRITE: "100"
-      OPENFGA_MAX_TYPES_PER_AUTHORIZATION_MODEL: "100"
-      
-    ports:
-      - "8080:8080"  # HTTP API
-      - "8081:8081"  # gRPC API
-    depends_on:
-      postgres-openfga:
-        condition: service_healthy
-      openfga-migrate:
-        condition: service_completed_successfully
-    networks:
-      - lockari-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    restart: unless-stopped
-
-  # OpenFGA CLI para testes e debug
-  openfga-cli:
-    image: openfga/cli:v0.2.5
-    container_name: lockari-openfga-cli
-    networks:
-      - lockari-network
-    volumes:
-      - ./docker/openfga:/workspace
-    working_dir: /workspace
-    # Mantém container rodando para execução de comandos
-    command: tail -f /dev/null
-    depends_on:
-      - openfga
-
-  # Redis (para seu backend)
-  redis:
-    image: redis:7-alpine
-    container_name: lockari-redis
-    ports:
-      - "6379:6379"
-    networks:
-      - lockari-network
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
+        - traefik
 networks:
-  lockari-network:
-    driver: bridge
+  traefik:
+    external: true
 
-volumes:
-  postgres_openfga_data:
-  redis_data:
+
