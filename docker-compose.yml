@@ -29,7 +29,7 @@ services:
       - "traefik.http.routers.lb-tshoot.entrypoints=websecure"
       - "traefik.http.routers.lb-tshoot.tls=true"
       - "traefik.http.routers.lb-tshoot.tls.certresolver=letsencrypt"
-      #- "traefik.http.services.lb-tshoot.loadbalancer.server.port=80"
+      - "traefik.http.services.lb-tshoot.loadbalancer.server.port=80"
     networks:
         - traefik
 networks:
