@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
+	"lockari-api-application/pkg/authenticator"
 )
 
 const AuthTokenKey = "Authorization"

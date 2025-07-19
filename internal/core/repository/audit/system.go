@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/audit"
-	"github.com/synera-br/lockari-backend-app/pkg/database"
-	"github.com/synera-br/lockari-backend-app/pkg/utils"
+	entity "lockari-api-application/internal/core/entity/audit"
+	"lockari-api-application/pkg/database"
+	"lockari-api-application/pkg/utils"
 )
 
 type auditSystemEvent struct {

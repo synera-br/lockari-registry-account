@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"sync"
 
-	dto "github.com/synera-br/lockari-backend-app/internal/core/dto/role"
-	entity_audit "github.com/synera-br/lockari-backend-app/internal/core/entity/audit"
-	profile "github.com/synera-br/lockari-backend-app/internal/core/entity/profile"
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/role"
-	tenant "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
-	"github.com/synera-br/lockari-backend-app/pkg/authorization"
-	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
-	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
-	"github.com/synera-br/lockari-backend-app/pkg/utils"
+	dto "lockari-api-application/internal/core/dto/role"
+	entity_audit "lockari-api-application/internal/core/entity/audit"
+	profile "lockari-api-application/internal/core/entity/profile"
+	entity "lockari-api-application/internal/core/entity/role"
+	tenant "lockari-api-application/internal/core/entity/tenant"
+	"lockari-api-application/pkg/authenticator"
+	"lockari-api-application/pkg/authorization"
+	corev1 "lockari-api-application/pkg/core/v1"
+	"lockari-api-application/pkg/tokengen"
+	"lockari-api-application/pkg/utils"
 )
 
 type userRoleService struct {

@@ -5,11 +5,11 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	webhandler_audit "github.com/synera-br/lockari-backend-app/internal/handler/web/audit"
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
-	"github.com/synera-br/lockari-backend-app/pkg/authorization"
-	cryptserver "github.com/synera-br/lockari-backend-app/pkg/crypt/crypt_server"
-	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
+	webhandler_audit "lockari-api-application/internal/handler/web/audit"
+	"lockari-api-application/pkg/authenticator"
+	"lockari-api-application/pkg/authorization"
+	cryptserver "lockari-api-application/pkg/crypt/crypt_server"
+	"lockari-api-application/pkg/tokengen"
 )
 
 // initializeAuditLogSystem configura o sistema completo de auditoria

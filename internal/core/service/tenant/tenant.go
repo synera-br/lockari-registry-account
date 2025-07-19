@@ -7,13 +7,13 @@ import (
 	"sync"
 	"time"
 
-	entity_audit "github.com/synera-br/lockari-backend-app/internal/core/entity/audit"
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
-	"github.com/synera-br/lockari-backend-app/pkg/authorization"
-	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
-	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
-	"github.com/synera-br/lockari-backend-app/pkg/utils"
+	entity_audit "lockari-api-application/internal/core/entity/audit"
+	entity "lockari-api-application/internal/core/entity/tenant"
+	"lockari-api-application/pkg/authenticator"
+	"lockari-api-application/pkg/authorization"
+	corev1 "lockari-api-application/pkg/core/v1"
+	"lockari-api-application/pkg/tokengen"
+	"lockari-api-application/pkg/utils"
 )
 
 type tenantEventService struct {

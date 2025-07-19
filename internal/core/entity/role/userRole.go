@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	dto "github.com/synera-br/lockari-backend-app/internal/core/dto/role"
+	dto "lockari-api-application/internal/core/dto/role"
 )
 
 type UserRoleRepository interface {

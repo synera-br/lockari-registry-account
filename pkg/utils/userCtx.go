@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"firebase.google.com/go/v4/auth"
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
+	"lockari-api-application/pkg/authenticator"
 )
 
 type AuthorizationToken string

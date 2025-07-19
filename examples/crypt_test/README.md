@@ -5,7 +5,7 @@ Este é um utilitário CLI para testar a funcionalidade de criptografia/descript
 ## Pré-requisitos
 
 - Go 1.23 ou superior
-- Acesso ao módulo `github.com/synera-br/lockari-backend-app`
+- Acesso ao módulo `lockari-api-application`
 
 ## Instalação
 

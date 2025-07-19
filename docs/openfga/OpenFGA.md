@@ -1770,7 +1770,7 @@ import (
     "context"
     "fmt"
     
-    "github.com/synera-br/lockari-backend-app/pkg/authorization/openfga"
+    "lockari-api-application/pkg/authorization/openfga"
 )
 
 type Service struct {
@@ -1880,7 +1880,7 @@ import (
     "strings"
     
     "github.com/gin-gonic/gin"
-    "github.com/synera-br/lockari-backend-app/pkg/authorization"
+    "lockari-api-application/pkg/authorization"
 )
 
 type AuthorizationMiddleware struct {

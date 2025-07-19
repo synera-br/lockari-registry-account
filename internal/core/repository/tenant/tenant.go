@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
-	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
-	"github.com/synera-br/lockari-backend-app/pkg/database"
-	"github.com/synera-br/lockari-backend-app/pkg/utils"
+	entity "lockari-api-application/internal/core/entity/tenant"
+	corev1 "lockari-api-application/pkg/core/v1"
+	"lockari-api-application/pkg/database"
+	"lockari-api-application/pkg/utils"
 )
 
 type tenantEventRepository struct {

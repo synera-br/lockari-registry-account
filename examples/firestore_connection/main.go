@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/synera-br/lockari-backend-app/pkg/database"
+	"lockari-api-application/pkg/database"
 )
 
 func main() {

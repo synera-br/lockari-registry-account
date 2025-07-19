@@ -1,4 +1,4 @@
-module github.com/synera-br/lockari-backend-app
+module lockari-api-application
 
 go 1.23.0
 

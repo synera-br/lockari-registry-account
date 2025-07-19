@@ -8,12 +8,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	dto "github.com/synera-br/lockari-backend-app/internal/core/dto/role"
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/role"
-	mid "github.com/synera-br/lockari-backend-app/internal/handler/middleware"
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
-	cryptserver "github.com/synera-br/lockari-backend-app/pkg/crypt/crypt_server"
-	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
+	dto "lockari-api-application/internal/core/dto/role"
+	entity "lockari-api-application/internal/core/entity/role"
+	mid "lockari-api-application/internal/handler/middleware"
+	"lockari-api-application/pkg/authenticator"
+	cryptserver "lockari-api-application/pkg/crypt/crypt_server"
+	"lockari-api-application/pkg/tokengen"
 )
 
 type roleHandler struct {

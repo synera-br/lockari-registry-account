@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
+	corev1 "lockari-api-application/pkg/core/v1"
 )
 
 const (

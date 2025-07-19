@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
-	"github.com/synera-br/lockari-backend-app/pkg/authorization"
+	entity "lockari-api-application/internal/core/entity/tenant"
+	"lockari-api-application/pkg/authorization"
 )
 
 func (s *tenantEventService) initializeAuthorizer(ctx context.Context, tenant *entity.Tenant, defaultUser entity.Owner, defaultGroup *entity.UserGroup, defaultVault *entity.Vault) error {

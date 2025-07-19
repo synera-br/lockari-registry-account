@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/synera-br/lockari-backend-app/pkg/utils"
+	"lockari-api-application/pkg/utils"
 )
 
 // Crypt interface defines the methods for cryptographic operations

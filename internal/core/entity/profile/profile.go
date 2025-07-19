@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	dto "github.com/synera-br/lockari-backend-app/internal/core/dto/profile"
-	entity_tenant "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
+	dto "lockari-api-application/internal/core/dto/profile"
+	entity_tenant "lockari-api-application/internal/core/entity/tenant"
 )
 
 type UserProfileRepository interface {

@@ -3,7 +3,7 @@ package corev1
 import (
 	"errors"
 
-	"github.com/synera-br/lockari-backend-app/pkg/utils"
+	"lockari-api-application/pkg/utils"
 )
 
 type Kind string

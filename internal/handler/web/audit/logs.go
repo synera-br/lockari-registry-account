@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/synera-br/lockari-backend-app/internal/handler/middleware"
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
-	"github.com/synera-br/lockari-backend-app/pkg/authorization"
-	cryptserver "github.com/synera-br/lockari-backend-app/pkg/crypt/crypt_server"
-	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
-	"github.com/synera-br/lockari-backend-app/pkg/utils"
+	"lockari-api-application/internal/handler/middleware"
+	"lockari-api-application/pkg/authenticator"
+	"lockari-api-application/pkg/authorization"
+	cryptserver "lockari-api-application/pkg/crypt/crypt_server"
+	"lockari-api-application/pkg/tokengen"
+	"lockari-api-application/pkg/utils"
 )
 
 type auditLogHandler struct {

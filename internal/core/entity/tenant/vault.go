@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/synera-br/lockari-backend-app/pkg/utils"
+	"lockari-api-application/pkg/utils"
 )
 
 // Vault representa um cofre de secrets, chaves, certificados ou chaves SSH

@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/audit"
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
-	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
-	"github.com/synera-br/lockari-backend-app/pkg/utils"
+	entity "lockari-api-application/internal/core/entity/audit"
+	"lockari-api-application/pkg/authenticator"
+	"lockari-api-application/pkg/tokengen"
+	"lockari-api-application/pkg/utils"
 )
 
 type auditSystemEvent struct {

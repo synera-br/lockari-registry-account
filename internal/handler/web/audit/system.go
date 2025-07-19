@@ -8,12 +8,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/audit"
-	"github.com/synera-br/lockari-backend-app/internal/handler/middleware"
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
-	cryptserver "github.com/synera-br/lockari-backend-app/pkg/crypt/crypt_server"
-	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
-	"github.com/synera-br/lockari-backend-app/pkg/utils"
+	entity "lockari-api-application/internal/core/entity/audit"
+	"lockari-api-application/internal/handler/middleware"
+	"lockari-api-application/pkg/authenticator"
+	cryptserver "lockari-api-application/pkg/crypt/crypt_server"
+	"lockari-api-application/pkg/tokengen"
+	"lockari-api-application/pkg/utils"
 )
 
 type auditSystemEventHandler struct {

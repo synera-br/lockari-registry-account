@@ -16,7 +16,7 @@ import (
     "log/slog"
     "time"
     
-    "github.com/synera-br/lockari-backend-app/pkg/authorization"
+    "lockari-api-application/pkg/authorization"
 )
 
 func main() {

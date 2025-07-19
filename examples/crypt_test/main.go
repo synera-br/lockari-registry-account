@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	cryptserver "github.com/synera-br/lockari-backend-app/pkg/crypt/crypt_server"
+	cryptserver "lockari-api-application/pkg/crypt/crypt_server"
 )
 
 const (

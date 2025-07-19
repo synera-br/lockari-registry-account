@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
-	corev1 "github.com/synera-br/lockari-backend-app/pkg/core/v1"
+	entity "lockari-api-application/internal/core/entity/tenant"
+	corev1 "lockari-api-application/pkg/core/v1"
 )
 
 func (s *tenantEventService) SetCustomClaims(ctx context.Context, owner *entity.Owner, claims *entity.TenantCustomClaims) error {

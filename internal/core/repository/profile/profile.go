@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/profile"
-	"github.com/synera-br/lockari-backend-app/pkg/database"
+	entity "lockari-api-application/internal/core/entity/profile"
+	"lockari-api-application/pkg/database"
 )
 
 type userProfileRepository struct {

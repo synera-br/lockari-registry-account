@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/synera-br/lockari-backend-app/pkg/authorization"
+	"lockari-api-application/pkg/authorization"
 )
 
 func demonstratePlanLimitsExample() {

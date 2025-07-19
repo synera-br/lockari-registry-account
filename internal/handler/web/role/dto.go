@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	entity "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
+	entity "lockari-api-application/internal/core/entity/tenant"
 )
 
 type TenantDetailsResponse struct {

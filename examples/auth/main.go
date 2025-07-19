@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/synera-br/lockari-backend-app/internal/core/entity/auth"
+	"lockari-api-application/internal/core/entity/auth"
 )
 
 func main() {

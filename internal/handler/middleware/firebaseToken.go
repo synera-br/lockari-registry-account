@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
-	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
+	"lockari-api-application/pkg/authenticator"
+	"lockari-api-application/pkg/tokengen"
 )
 
 type ContextKey string

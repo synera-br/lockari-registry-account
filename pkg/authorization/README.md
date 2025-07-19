@@ -89,7 +89,7 @@ TokenPermissionRegenerate         // Regenerar token
 package main
 
 import (
-    "github.com/synera-br/lockari-backend-app/pkg/authorization"
+    "lockari-api-application/pkg/authorization"
 )
 
 func main() {
@@ -401,7 +401,7 @@ Todas as operações são automaticamente auditadas e logadas. As informações 
 ```go
 import (
     "github.com/gin-gonic/gin"
-    "github.com/synera-br/lockari-backend-app/pkg/authorization"
+    "lockari-api-application/pkg/authorization"
 )
 
 func main() {

@@ -26,7 +26,7 @@ Este package faz parte do projeto Lockari e usa as dependências já presentes n
 import (
     "os"
     "time"
-    "github.com/synera-br/lockari-backend-app/pkg/tokengen"
+    "lockari-api-application/pkg/tokengen"
 )
 
 // Secret vem de variável de ambiente

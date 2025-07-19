@@ -10,36 +10,36 @@ import (
 
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
-	"github.com/synera-br/lockari-backend-app/config"
+	"lockari-api-application/config"
 
 	// AUhtneitcation
-	webhandler "github.com/synera-br/lockari-backend-app/internal/handler/web/tenant"
+	webhandler "lockari-api-application/internal/handler/web/tenant"
 
 	// AUDIT
-	entity_audit "github.com/synera-br/lockari-backend-app/internal/core/entity/audit"
-	repo_audit "github.com/synera-br/lockari-backend-app/internal/core/repository/audit"
-	svc_audit "github.com/synera-br/lockari-backend-app/internal/core/service/audit"
-	webhandler_audit "github.com/synera-br/lockari-backend-app/internal/handler/web/audit"
+	entity_audit "lockari-api-application/internal/core/entity/audit"
+	repo_audit "lockari-api-application/internal/core/repository/audit"
+	svc_audit "lockari-api-application/internal/core/service/audit"
+	webhandler_audit "lockari-api-application/internal/handler/web/audit"
 
 	// TENANT
-	entity_tenant "github.com/synera-br/lockari-backend-app/internal/core/entity/tenant"
-	repo_tenant "github.com/synera-br/lockari-backend-app/internal/core/repository/tenant"
-	svc_tenant "github.com/synera-br/lockari-backend-app/internal/core/service/tenant"
+	entity_tenant "lockari-api-application/internal/core/entity/tenant"
+	repo_tenant "lockari-api-application/internal/core/repository/tenant"
+	svc_tenant "lockari-api-application/internal/core/service/tenant"
 
 	// ROLE
-	entity_role "github.com/synera-br/lockari-backend-app/internal/core/entity/role"
-	repo_role "github.com/synera-br/lockari-backend-app/internal/core/repository/role"
-	svc_role "github.com/synera-br/lockari-backend-app/internal/core/service/role"
-	webhandler_role "github.com/synera-br/lockari-backend-app/internal/handler/web/role"
+	entity_role "lockari-api-application/internal/core/entity/role"
+	repo_role "lockari-api-application/internal/core/repository/role"
+	svc_role "lockari-api-application/internal/core/service/role"
+	webhandler_role "lockari-api-application/internal/handler/web/role"
 
-	"github.com/synera-br/lockari-backend-app/pkg/authenticator"
-	"github.com/synera-br/lockari-backend-app/pkg/authorization"
-	"github.com/synera-br/lockari-backend-app/pkg/cache"
-	cryptserver "github.com/synera-br/lockari-backend-app/pkg/crypt/crypt_server"
-	"github.com/synera-br/lockari-backend-app/pkg/database"
-	httpserver "github.com/synera-br/lockari-backend-app/pkg/http_server"
-	"github.com/synera-br/lockari-backend-app/pkg/message_queue"
-	"github.com/synera-br/lockari-backend-app/pkg/tokengen"
+	"lockari-api-application/pkg/authenticator"
+	"lockari-api-application/pkg/authorization"
+	"lockari-api-application/pkg/cache"
+	cryptserver "lockari-api-application/pkg/crypt/crypt_server"
+	"lockari-api-application/pkg/database"
+	httpserver "lockari-api-application/pkg/http_server"
+	"lockari-api-application/pkg/message_queue"
+	"lockari-api-application/pkg/tokengen"
 )
 
 func main() {
