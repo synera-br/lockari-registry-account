@@ -22,7 +22,8 @@ services:
     command: ["sleep", "infinity"]
     container_name: lb-tshoot
     volumes:
-      - ./config:/config
+      - ../config:/config
+      - .:/app
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.lb-tshoot.rule=Host(`api-stg.lockari.com`)"
