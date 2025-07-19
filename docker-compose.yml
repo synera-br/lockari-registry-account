@@ -5,7 +5,7 @@ services:
     build:
       dockerfile: build/Dockerfile
       context: .
-    container-name: lbackend
+    container_name: lbackend
     volumes:
       - ./config:/config
     labels:
