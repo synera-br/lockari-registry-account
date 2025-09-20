@@ -3,7 +3,7 @@ run-name: sonar-scan-code
 on:
   push:
     branches:
-      - disabled
+      - develop
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
