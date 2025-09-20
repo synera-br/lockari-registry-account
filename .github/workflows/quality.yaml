@@ -1,4 +1,5 @@
-name: Build
+name: Sonar Scan Code
+run-name: sonar-scan-code
 on:
   push:
     branches:
