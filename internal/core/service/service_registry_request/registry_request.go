@@ -198,7 +198,7 @@ func (s *registryRequestParams) prepareToPublish(ctx context.Context, account *r
 	}
 
 	if err := s.publishRegistryAccount(ctx, msg); err != nil {
-		s.spanError(ctx, fmt.Errorf("CRITICAL: failed to publish user.created event", "tenantID", account.Tenant.ID, "error", err))
+		s.spanError(ctx, fmt.Errorf("CRITICAL: failed to publish user.created event for tenantID %s: %w", account.Tenant.ID, err))
 		s.log.Error("CRITICAL: failed to publish user.created event",
 			"userID", account.User.ID,
 			"tenantID", account.Tenant.ID,
@@ -458,18 +458,46 @@ func (s *registryRequestParams) ensureUserInAuthProvider(ctx context.Context, us
 		}
 	}
 
+	startTime := 1.0
 	if userInAuthProvider == nil {
-		userInAuthProvider, err = s.createUserInAuthProvider(ctx, user)
-		if err != nil {
-			s.spanError(ctx, err)
-			return nil, wasCreated, err
+		s.log.Warn("User not found in auth provider, starting retry logic", "email", user.Email)
+
+		for i := 0; i < 3; i++ {
+			fmt.Printf("Retrying to get user in auth provider, attempt: %d, email: %s\n", i+1, user.Email)
+			s.log.Info("Retrying to get user in auth provider", "attempt", i+1, "email", user.Email, "wait_time", startTime)
+
+			time.Sleep(time.Duration(startTime) * time.Second)
+
+			retryUser, retryErr := s.getUserInAuthProvider(ctx, user)
+			if retryErr != nil {
+				s.log.Error("Retry attempt failed", "attempt", i+1, "email", user.Email, "error", retryErr.Error())
+				if retryErr != utils.UserNotFound {
+					return nil, wasCreated, retryErr
+				}
+			}
+
+			if retryUser != nil {
+				s.log.Info("User found on retry", "attempt", i+1, "email", user.Email, "uid", retryUser.UID)
+				return retryUser, wasCreated, nil
+			}
+
+			startTime += 1.5
 		}
 
-		if userInAuthProvider == nil {
-			s.spanError(ctx, utils.UserErrorToCreate)
-			return nil, wasCreated, utils.UserErrorToCreate
-		}
-		wasCreated = true
+		s.log.Error("User not found after all retry attempts", "email", user.Email, "attempts", 3)
+		return nil, wasCreated, utils.UserNotFound
+
+		// userInAuthProvider, err = s.createUserInAuthProvider(ctx, user)
+		// if err != nil {
+		// 	s.spanError(ctx, err)
+		// 	return nil, wasCreated, err
+		// }
+
+		// if userInAuthProvider == nil {
+		// 	s.spanError(ctx, utils.UserErrorToCreate)
+		// 	return nil, wasCreated, utils.UserErrorToCreate
+		// }
+		// wasCreated = true
 	}
 
 	return userInAuthProvider, wasCreated, nil
@@ -500,24 +528,36 @@ func (s *registryRequestParams) getUserInAuthProvider(ctx context.Context, user 
 	defer span.End()
 
 	if user == nil {
+		s.log.Error("getUserInAuthProvider: user is nil")
 		return nil, utils.ErrInvalidUser
 	}
 
 	if s.auth == nil {
+		s.log.Error("getUserInAuthProvider: auth client is nil")
 		return nil, utils.ServiceRegistryRequestInvalidAuthenticationProvider
 	}
 
+	s.log.Info("Attempting to get user from Firebase Auth", "email", user.Email)
+
 	userAuth, err := s.auth.GetUserByEmail(ctx, user.Email)
 	if err != nil {
+		s.log.Error("Firebase Auth GetUserByEmail failed", "email", user.Email, "error", err.Error())
 		if strings.Contains(err.Error(), "no user exists") {
 			return nil, utils.UserNotFound
 		}
+		if strings.Contains(err.Error(), "user not found") {
+			return nil, utils.UserNotFound
+		}
+		// Return the original error for other Firebase errors (config, network, etc.)
+		return nil, err
 	}
 
 	if userAuth == nil {
+		s.log.Warn("Firebase Auth returned nil user", "email", user.Email)
 		return nil, utils.UserNotFound
 	}
 
+	s.log.Info("User found in Firebase Auth", "email", user.Email, "uid", userAuth.UID, "email_verified", userAuth.EmailVerified)
 	return userAuth, nil
 }
 

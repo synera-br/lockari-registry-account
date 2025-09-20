@@ -145,8 +145,6 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 func (s *Server) Run() error {
 
-	s.Engine.Use(otelgin.Middleware(fmt.Sprintf("%s-auto", s.Config.ServiceName)))
-	s.Engine.Use(cors.Default())
 	if err := s.Engine.Run(); err != nil {
 		return err
 	}
@@ -163,6 +161,17 @@ func (s *Server) Initialize(userAuthFunc, appAuthFunc gin.HandlerFunc) error {
 		return fmt.Errorf("failed to setup logger: %w", err)
 	}
 	s.Logger = logger
+
+	// Configura o OpenTelemetry middleware
+	s.Engine.Use(otelgin.Middleware(fmt.Sprintf("%s-auto", s.Config.ServiceName)))
+
+	// Configura CORS
+	s.Engine.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		ExposeHeaders:   []string{"Content-Length"},
+	}))
 
 	// Define as funções de autenticação
 	s.userAuthFunc = userAuthFunc
@@ -261,13 +270,15 @@ func (s *Server) RegisterRoute(method, path string, handlers ...gin.HandlerFunc)
 		return
 	}
 
-	// Adiciona os handlers de autenticação, se fornecidos
+	// Adiciona os handlers de autenticação, se fornecidos, mas não para rotas OPTIONS
 	var allHandlers []gin.HandlerFunc
-	if s.userAuthFunc != nil {
-		allHandlers = append(allHandlers, s.userAuthFunc)
-	}
-	if s.appAuthFunc != nil {
-		allHandlers = append(allHandlers, s.appAuthFunc)
+	if method != http.MethodOptions {
+		if s.userAuthFunc != nil {
+			allHandlers = append(allHandlers, s.userAuthFunc)
+		}
+		if s.appAuthFunc != nil {
+			allHandlers = append(allHandlers, s.appAuthFunc)
+		}
 	}
 
 	// Adiciona os handlers da rota

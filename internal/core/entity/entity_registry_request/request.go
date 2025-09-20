@@ -70,10 +70,6 @@ func (r *RegistryRequest) Validate() error {
 		return errors.New("invalid tenant format: use only lowercase letters, numbers and hyphens")
 	}
 
-	if strings.TrimSpace(r.Password) == "" {
-		return errors.New("password is required")
-	}
-
 	return nil
 }
 

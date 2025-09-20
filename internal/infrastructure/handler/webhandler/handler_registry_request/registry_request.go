@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"registry-account/internal/core/dto/dto_registry_request"
 	"registry-account/internal/core/entity/entity_registry_request"
 	entitytenant "registry-account/internal/core/entity/entity_tenant"
 	"registry-account/internal/core/entity/entity_user"
@@ -82,10 +83,10 @@ func InitializeHandlerRegistryRequest(
 }
 
 func (h *handlerRegistryRequestParams) setupRoutes() error {
-
-	h.web.RegisterRoute("POST", "/registry/request", h.registryNewAccount)
-	h.web.RegisterRoute("GET", "/registry/tenant/:name", h.getTenant)
-	h.web.RegisterRoute("GET", "/registry/user/:email", h.getUser)
+	h.web.RegisterRoute("OPTIONS", "/api/v1/registry", h.handleOptionsRequest)
+	h.web.RegisterRoute("POST", "/api/v1/registry", h.registryNewAccount)
+	h.web.RegisterRoute("GET", "/api/v1/tenant/:name", h.getTenant)
+	h.web.RegisterRoute("GET", "/api/v1/user/:email", h.getUser)
 
 	return nil
 }
@@ -150,20 +151,30 @@ func (h *handlerRegistryRequestParams) registryNewAccount(c *gin.Context) {
 	ctx, span := h.startSpan(c.Request.Context(), "handlerRegistryNewAccount")
 	defer span.End()
 
-	var registryRequest entity_registry_request.RegistryRequest
+	var registryRequest dto_registry_request.RegistryRequestParams
 	err := c.ShouldBindBodyWithJSON(&registryRequest)
 	if err != nil {
+		h.log.Error("Failed to bind JSON body: %v", err)
 		h.handleError(c, ctx, http.StatusBadRequest, "invalid body request", err)
 		return
 	}
 
 	if err = registryRequest.Validate(); err != nil {
+		h.log.Error("Validation error: %v", err)
 		h.handleError(c, ctx, http.StatusBadRequest, "data is not valid", err)
 		return
 	}
 
-	userResponse, err := h.svcRegistryRequest.RegistryNewAccount(ctx, &registryRequest)
+	userRequest := &entity_registry_request.RegistryRequest{
+		Name:   registryRequest.UserData.Name,
+		Email:  registryRequest.UserData.Email,
+		Tenant: registryRequest.UserData.TenantName,
+	}
+
+	// var registryRequest entity_registry_request.RegistryRequest
+	userResponse, err := h.svcRegistryRequest.RegistryNewAccount(ctx, userRequest)
 	if err != nil {
+		h.log.Error("Failed to register new account: %v", err)
 		h.handleError(c, ctx, http.StatusInternalServerError, "error to registry a new account", err)
 		return
 	}
@@ -188,6 +199,15 @@ func (h *handlerRegistryRequestParams) handleError(c *gin.Context, ctx context.C
 
 	// Aborta a requisição com o status e o JSON
 	c.AbortWithStatusJSON(statusCode, response)
+}
+
+// handleOptionsRequest handles CORS preflight requests
+func (h *handlerRegistryRequestParams) handleOptionsRequest(c *gin.Context) {
+	c.Header("Access-Control-Allow-Origin", "*")
+	c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS")
+	c.Header("Access-Control-Allow-Headers", "Origin, Content-Length, Content-Type, Authorization")
+	c.Header("Access-Control-Expose-Headers", "Content-Length")
+	c.Status(http.StatusOK)
 }
 
 func (h *handlerRegistryRequestParams) startSpan(ctx context.Context, operationName string) (context.Context, trace.Span) {
